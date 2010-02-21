@@ -1,0 +1,5 @@
+gtk+2
+dbus-glib
+libnotify
+gslapt
+libgnomesu | gksu | kdesu

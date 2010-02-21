@@ -1,0 +1,44 @@
+# slapt-update-notifier German translation
+# Copyright (C) 2005-2009 Manfred Mueller
+# This file is distributed under the same license as the slapt-update-notifier package.
+# Manfred Mueller <mmueller@live-modules.org>, 2005-2009.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: slapt-update-notifier 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-02-22 21:15-0500\n"
+"PO-Revision-Date: 2009-04-15-00:08+0100\n"
+"Last-Translator: Manfred Mueller <mmueller@live-modules.org>\n"
+"Language-Team: slapt-get-devel <slapt-get-devel@software.jaos.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/client.c:128
+msgid "New updates available"
+msgstr "Neue Updates vorhanden"
+
+#: src/client.c:129
+msgid "Click on the update icon to see the available updates"
+msgstr "Auf das Update-Icon zur Anzeige neuer Updates klicken"
+
+#: src/client.c:237
+msgid "Updates available"
+msgstr "Updates vorhanden"
+
+#: src/client.c:244
+msgid "Hide"
+msgstr "Verbergen"
+
+#~ msgid "Orientation"
+#~ msgstr "Richtung"
+
+#~ msgid "The orientation of the tray."
+#~ msgstr "Ausrichtung des Symbols."
+
+#~ msgid "Show Updates"
+#~ msgstr "Zeige Updates"
+
+#~ msgid "Tell me about this later"
+#~ msgstr "Spaeter informieren"

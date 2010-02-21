@@ -1,0 +1,43 @@
+Copyright (C) 2003-2010 Jason Woodward <woodwardj at jaos dot org>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Library General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+
+About:
+ slapt-update-service is a DBus service which notifies about package updates
+ available via slapt-get and gslapt.  slapt-update-service places an icon in
+ the user's notification area when updates are available.  Clicking the icon
+ starts upgrading with gslapt.
+
+Requirements:
+ To build from source, you must have these packages installed:
+  autoconf automake libtool m4 gettext gettext-tools pkgconfig
+  glibc atk glib2 gtk+2 pango x11 zlib dbus-glib openssl curl
+  slapt-get
+
+Building:
+  Run ./configure.  you must specify the use of one of the following graphical
+  su/sudo applications: gnomesu, gksu, kdesu.  For example:
+    ./configure --prefix=/usr --sysconfdir=/etc --with-gnomesu=yes
+  Now run make.
+
+Installing:
+  You can either run 'make install' or 'make pkg'.  The 'pkg' make target
+  will create a Slackware package in ./pkg.
+
+Caveats:
+  Right now the graphical su/sudo application gnomesu is hardcoded within
+  slapt-update-service based on the build time configure option.
+
