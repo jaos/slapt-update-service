@@ -24,8 +24,8 @@ About:
 Requirements:
  To build from source, you must have these packages installed:
   autoconf automake libtool m4 gettext gettext-tools pkgconfig
-  glibc atk glib2 gtk+2 pango x11 zlib dbus-glib openssl curl
-  slapt-get
+  intltool atk glib2 gtk+2 pango x11 zlib dbus-glib openssl
+  curl slapt-get
 
 Building:
   Run ./configure.  you must specify the use of one of the following graphical
