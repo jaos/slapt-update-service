@@ -35,6 +35,9 @@ int main (void)
   FILE *newstdout = NULL;
 
   g_type_init();
+#ifdef SLAPT_HAS_GPGME
+  gpgme_check_version (NULL);
+#endif
 
   bus  = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
   if (bus == NULL) {
