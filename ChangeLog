@@ -1,4 +1,7 @@
 
+0.5.0a Sep 28, 2010
+ * slapt-get 0.10.2g api compatibility 
+
 0.5.0 Feb 22, 2010
  * use DBus for system service
  * renamed from slapt-update-notifier to slapt-update-service
