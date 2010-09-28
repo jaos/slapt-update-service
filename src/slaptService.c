@@ -31,10 +31,10 @@ G_DEFINE_TYPE (SlaptService, slapt_service, G_TYPE_OBJECT);
 static gboolean slapt_service_real_check_for_updates(SlaptService *self, guint *count, GError **error)
 {
   unsigned int i;
-  struct slapt_pkg_list *installed_pkgs = NULL;
-  struct slapt_pkg_list *avail_pkgs     = NULL;
-  slapt_transaction_t *tran             = NULL;
-  slapt_rc_config *rc                   = NULL;
+  slapt_pkg_list_t *installed_pkgs = NULL;
+  slapt_pkg_list_t *avail_pkgs     = NULL;
+  slapt_transaction_t *tran        = NULL;
+  slapt_rc_config *rc              = NULL;
 
   g_assert (SLAPT_IS_SERVICE (self));
 
