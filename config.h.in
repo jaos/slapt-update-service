@@ -99,5 +99,8 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* has notification */
+#undef USE_LIBNOTIFY
+
 /* Version number of package */
 #undef VERSION
