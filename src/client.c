@@ -26,7 +26,9 @@
 #include <string.h>
 #include <glib.h>
 #include <gtk/gtk.h>
+#ifdef USE_LIBNOTIFY
 #include <libnotify/notify.h>
+#endif
 
 #define _(x) gettext(x)
 #define SUN_RUNNING_ICON PIXMAPS_DIR "/slapt-update-notifier-idle.png"
@@ -98,6 +100,7 @@ void tray_menu (GtkStatusIcon *status_icon, guint button, guint activate_time, g
   );
 }
 
+#ifdef USE_LIBNOTIFY
 static void notify_callback(NotifyNotification *handle, const char *action, void *user_data)
 {
   GMainLoop *loop = (GMainLoop*)user_data;
@@ -141,6 +144,7 @@ gboolean show_notification (gpointer data)
 
   return FALSE;
 }
+#endif
 
 void tray_destroy (struct slapt_update_notifier *sun)
 {
@@ -155,11 +159,14 @@ void tray_destroy (struct slapt_update_notifier *sun)
 
 static void hide_sun (void)
 {
+#ifdef USE_LIBNOTIFY
   NotifyNotification *n = g_object_get_data(G_OBJECT(sun->tray_icon),"notification");
+#endif
   GMainLoop *loop = g_object_get_data(G_OBJECT(sun->tray_icon), "notification_loop");
 
   gtk_status_icon_set_visible(sun->tray_icon, FALSE);
 
+#ifdef USE_LIBNOTIFY
   if ( n != NULL ) {
     GError *error = NULL;
     if (notify_notification_close(n, &error) != TRUE) {
@@ -167,6 +174,7 @@ static void hide_sun (void)
       g_error_free (error);
     }
   }
+#endif
   
   if ( loop != NULL )
     g_main_loop_quit(loop);
@@ -191,7 +199,9 @@ static void check_for_updates_callback (DBusGProxy *proxy, guint OUT_count, GErr
   }
 
   gtk_status_icon_set_visible(sun->tray_icon, TRUE);
+#ifdef USE_LIBNOTIFY
   show_notification(NULL);
+#endif
 }
 
 static void refresh_cache_callback (DBusGProxy *proxy, GError *error, gpointer userdata)
@@ -227,7 +237,9 @@ int main (int argc, char *argv[])
   GtkWidget *menuitem = NULL;
 
   gtk_init (&argc, &argv);
+#ifdef USE_LIBNOTIFY
   notify_init("slapt-update-notifier");
+#endif
 
   sun = malloc(sizeof *sun);
   sun->tray_icon        = gtk_status_icon_new ();
@@ -267,7 +279,9 @@ int main (int argc, char *argv[])
   g_object_unref (sun->proxy);
   free(sun);
 
+#ifdef USE_LIBNOTIFY
   notify_uninit();
+#endif
 
   return 0;
 }

@@ -46,9 +46,17 @@ AC_SUBST(DBUS_LIBS)
 PKG_CHECK_MODULES(GTK, [gtk+-2.0])
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
-PKG_CHECK_MODULES(NOTIFY, [libnotify])
-AC_SUBST(NOTIFY_CFLAGS)
-AC_SUBST(NOTIFY_LIBS)
+AC_ARG_WITH(
+  [notification],
+  AC_HELP_STRING([--with-notification], [use notification (default is no)]),
+)
+AS_IF([test "x$with_notification" = "xyes"], [
+  PKG_CHECK_MODULES(NOTIFY, [libnotify])
+  AC_DEFINE(USE_LIBNOTIFY, 1, [has notification])
+  AC_SUBST(NOTIFY_CFLAGS)
+  AC_SUBST(NOTIFY_LIBS)
+])
+
 
 AS_AC_EXPAND(DATADIR, $datadir)
 DBUS_SYSTEM_SERVICES_DIR="$DATADIR/dbus-1/system-services"
