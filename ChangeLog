@@ -1,5 +1,6 @@
 
 0.5.0c Aug 30, 2012
+ * account for gtk/gdk-pixbuf split
  * added hebrew translation by Isratine Citizen
 
 0.5.0b Nov 16, 2010
