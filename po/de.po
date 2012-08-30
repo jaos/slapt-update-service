@@ -1,6 +1,6 @@
 # slapt-update-notifier German translation
 # Copyright (C) 2005-2009 Manfred Mueller
-# This file is distributed under the same license as the slapt-update-notifier package.
+# This file is distributed under the same license as the slapt-update-service package.
 # Manfred Mueller <mmueller@live-modules.org>, 2005-2009.
 #
 msgid ""

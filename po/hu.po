@@ -1,6 +1,6 @@
 # slapt-update-service hungarian translation
 # Copyright (C) 2010 Jason Woodward
-# This file is distributed under the same license as the slapt-uupdate-service package.
+# This file is distributed under the same license as the slapt-update-service package.
 # FIRST AUTHOR Peter Polonkai <polesz@nedudu.hu>, 2010.
 #
 msgid ""
