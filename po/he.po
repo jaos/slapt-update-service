@@ -1,0 +1,45 @@
+# slapt-update-service hebrew translation
+# Copyright (C) 2003-2012 Jason Woodward
+# This file is distributed under the same license as the slapt-update-service package.
+# Isratine Citizen <genghiskhan@gmx.ca>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: slapt-update-service git\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-02-22 21:15-0500\n"
+"PO-Revision-Date: 2012-08-26 15:04+0200\n"
+"Last-Translator: Isratine Citizen <genghiskhan@gmx.ca>\n"
+"Language-Team: slapt-get-devel <slapt-get-devel@software.jaos.org>\n"
+"Language: he\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/client.c:128
+msgid "New updates available"
+msgstr "עדכונים חדשים זמינים"
+
+#: src/client.c:129
+msgid "Click on the update icon to see the available updates"
+msgstr "הקליקו על צלמית העדכון כדי לראות את העדכונים הזמינים"
+
+#: src/client.c:237
+msgid "Updates available"
+msgstr "עדכונים זמינים"
+
+#: src/client.c:244
+msgid "Hide"
+msgstr "הסתרה"
+
+#~ msgid "Orientation"
+#~ msgstr "אוריינטציה"
+
+#~ msgid "The orientation of the tray."
+#~ msgstr "אוריינטציית המגש."
+
+#~ msgid "Show Updates"
+#~ msgstr "הצגת עדכונים"
+
+#~ msgid "Tell me about this later"
+#~ msgstr "הודע לי אודות זאת מאוחר יותר"
