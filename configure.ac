@@ -28,6 +28,7 @@ AC_CHECK_HEADERS([stdlib.h string.h])
 # Checks for library functions.
 AC_CHECK_HEADER(slapt.h, [], [AC_MSG_ERROR(libslapt headers are missing)])
 AC_CHECK_LIB(z,gzopen, [LIBS="$LIBS -lz"], [AC_MSG_ERROR(libz is missing)])
+AC_CHECK_LIB(m,round, [LIBS="$LIBS -lm"], [AC_MSG_ERROR(libm is missing)])
 AC_CHECK_LIB(curl,curl_global_init, [LIBS="$LIBS `curl-config --libs`"], [AC_MSG_ERROR(curl libs are missing)])
 AC_CHECK_LIB(gpgme,gpgme_new, [
     LIBS="`gpgme-config --libs` $LIBS"
