@@ -21,41 +21,39 @@
 #include <dbus/dbus-glib-bindings.h>
 #include <slapt.h>
 
-#define SLAPT_TYPE_SERVICE                  (slapt_service_get_type ())
-#define SLAPT_SERVICE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), SLAPT_TYPE_SERVICE, SlaptService))
-#define SLAPT_IS_SERVICE(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SLAPT_TYPE_SERVICE))
-#define SLAPT_SERVICE_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), SLAPT_TYPE_SERVICE, SlaptServiceClass))
-#define SLAPT_IS_SERVICE_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), SLAPT_TYPE_SERVICE))
-#define SLAPT_SERVICE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), SLAPT_TYPE_SERVICE, SlaptServiceClass))
+#define SLAPT_TYPE_SERVICE (slapt_service_get_type())
+#define SLAPT_SERVICE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), SLAPT_TYPE_SERVICE, SlaptService))
+#define SLAPT_IS_SERVICE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), SLAPT_TYPE_SERVICE))
+#define SLAPT_SERVICE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), SLAPT_TYPE_SERVICE, SlaptServiceClass))
+#define SLAPT_IS_SERVICE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), SLAPT_TYPE_SERVICE))
+#define SLAPT_SERVICE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), SLAPT_TYPE_SERVICE, SlaptServiceClass))
 
-typedef struct _SlaptService        SlaptService;
-typedef struct _SlaptServiceClass   SlaptServiceClass;
+typedef struct _SlaptService SlaptService;
+typedef struct _SlaptServiceClass SlaptServiceClass;
 typedef struct _SlaptServicePrivate SlaptServicePrivate;
 
-struct _SlaptService
-{
-  GObject parent_instance;
+struct _SlaptService {
+    GObject parent_instance;
 
-  SlaptServicePrivate *priv;
+    SlaptServicePrivate *priv;
 
-  gboolean (*check_for_updates) (SlaptService *self, guint *count, GError **error);
-  gboolean (*refresh_cache) (SlaptService *self);
+    gboolean (*check_for_updates)(SlaptService *self, guint *count, GError **error);
+    gboolean (*refresh_cache)(SlaptService *self);
 };
 
-struct _SlaptServiceClass
-{
-  GObjectClass parent_class;
+struct _SlaptServiceClass {
+    GObjectClass parent_class;
 
-  DBusGConnection *connection;
+    DBusGConnection *connection;
 
-  gboolean (*check_for_updates) (SlaptService *self, guint *count, GError **error);
-  gboolean (*refresh_cache) (SlaptService *self);
+    gboolean (*check_for_updates)(SlaptService *self, guint *count, GError **error);
+    gboolean (*refresh_cache)(SlaptService *self);
 };
 
 /* used by SLAPT_TYPE_SERVICE */
-GType slapt_service_get_type (void);
+GType slapt_service_get_type(void);
 
-SlaptService *slapt_service_new (void);
+SlaptService *slapt_service_new(void);
 /*
  * Method definitions.
  */
@@ -63,4 +61,3 @@ gboolean slapt_service_check_for_updates(SlaptService *self, guint *count, GErro
 gboolean slapt_service_refresh_cache(SlaptService *self);
 
 #endif /* __SLAPT_SERVICE_H__ */
-

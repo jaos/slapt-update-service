@@ -24,57 +24,55 @@
 
 static GMainLoop *loop;
 
-int main (void)
+int main(void)
 {
-  DBusGConnection *bus;
-  DBusGProxy *proxy;
-  GError *error = NULL;
-  guint32 ret;
-  SlaptService *slapt_service = NULL;
-  int saved_stdout = dup(1);
-  FILE *newstdout = NULL;
+    DBusGConnection *bus;
+    DBusGProxy *proxy;
+    GError *error = NULL;
+    guint32 ret;
+    SlaptService *slapt_service = NULL;
+    int saved_stdout = dup(1);
+    FILE *newstdout = NULL;
 
-  g_type_init();
+    g_type_init();
 #ifdef SLAPT_HAS_GPGME
-  gpgme_check_version (NULL);
+    gpgme_check_version(NULL);
 #endif
 
-  bus  = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-  if (bus == NULL) {
-    syslog (LOG_DAEMON | LOG_INFO,
-        "Failed to make connection to system bus: %s",
-        error->message);
-    g_error_free (error);
-    exit(1);
-  }
+    bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+    if (bus == NULL) {
+        syslog(LOG_DAEMON | LOG_INFO,
+               "Failed to make connection to system bus: %s",
+               error->message);
+        g_error_free(error);
+        exit(1);
+    }
 
-  proxy = dbus_g_proxy_new_for_name (bus, DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
-  if (!org_freedesktop_DBus_request_name (proxy, SLAPT_SERVICE_NAMESPACE, 0, &ret, &error)) {
-    syslog (LOG_DAEMON | LOG_INFO,
-        "There was an error requesting the name: %s",
-        error->message);
-    g_error_free (error);
-    exit(1);
-  }
+    proxy = dbus_g_proxy_new_for_name(bus, DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
+    if (!org_freedesktop_DBus_request_name(proxy, SLAPT_SERVICE_NAMESPACE, 0, &ret, &error)) {
+        syslog(LOG_DAEMON | LOG_INFO,
+               "There was an error requesting the name: %s",
+               error->message);
+        g_error_free(error);
+        exit(1);
+    }
 
-  if (ret != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER)
-    exit(1);
+    if (ret != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER)
+        exit(1);
 
-  slapt_service = slapt_service_new ();
+    slapt_service = slapt_service_new();
 
-  dbus_g_connection_register_g_object (bus,
-               SLAPT_SERVICE_PATH,
-               G_OBJECT (slapt_service));
+    dbus_g_connection_register_g_object(bus,
+                                        SLAPT_SERVICE_PATH,
+                                        G_OBJECT(slapt_service));
 
+    /* this is to silence the bad use of stdout in libslapt */
+    newstdout = freopen("/dev/null", "w", stdout);
+    if (newstdout == NULL) {
+        fprintf(stderr, "failed to close stdout\n");
+    }
 
-  /* this is to silence the bad use of stdout in libslapt */
-  newstdout = freopen("/dev/null", "w", stdout);
-  if (newstdout == NULL) {
-    fprintf(stderr,"failed to close stdout\n");
-  }
-
-
-  loop = g_main_loop_new (NULL, FALSE);
-  g_main_loop_run (loop);
-  return 0;
+    loop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(loop);
+    return 0;
 }
