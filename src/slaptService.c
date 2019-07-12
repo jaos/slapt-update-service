@@ -19,13 +19,12 @@
 #include "slaptService.h"
 #include "server-bindings.h"
 #include "common.h"
-#define SLAPT_SERVICE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), SLAPT_TYPE_SERVICE, SlaptServicePrivate))
 
 struct _SlaptServicePrivate {
     int count; /* nothing here yet */
 };
 
-G_DEFINE_TYPE(SlaptService, slapt_service, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_CODE(SlaptService, slapt_service, G_TYPE_OBJECT, G_ADD_PRIVATE(SlaptService))
 
 static gboolean slapt_service_real_check_for_updates(SlaptService *self, guint *count, GError **error)
 {
@@ -134,8 +133,6 @@ static void slapt_service_class_init(SlaptServiceClass *class)
 {
     GError *error = NULL;
 
-    g_type_class_add_private(class, sizeof(SlaptServicePrivate));
-
     class->check_for_updates = NULL;
     class->refresh_cache = NULL;
 
@@ -147,12 +144,12 @@ static void slapt_service_init(SlaptService *self)
     SlaptServiceClass *class = SLAPT_SERVICE_GET_CLASS(self);
     int request_ret;
 
-    SlaptServicePrivate *priv;
+    SlaptServicePrivate *priv = slapt_service_get_instance_private(self);
 
     self->check_for_updates = slapt_service_real_check_for_updates;
     self->refresh_cache = slapt_service_real_refresh_cache;
 
-    self->priv = priv = SLAPT_SERVICE_GET_PRIVATE(self);
+    self->priv = priv;
     priv->count = 0;
 }
 

@@ -34,7 +34,9 @@ int main(void)
     int saved_stdout = dup(1);
     FILE *newstdout = NULL;
 
-    g_type_init();
+#if !GLIB_CHECK_VERSION(2,35,0)
+    g_type_init ();
+#endif
 #ifdef SLAPT_HAS_GPGME
     gpgme_check_version(NULL);
 #endif

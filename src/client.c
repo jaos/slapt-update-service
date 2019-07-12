@@ -105,7 +105,11 @@ static void notify_callback(NotifyNotification *handle, const char *action, void
     GMainLoop *loop = (GMainLoop *)user_data;
 
     if (strcmp(action, NOTIFICATION_SHOW_UPDATES) == 0) {
+#if GTK_CHECK_VERSION(3,0,0)
+        gtk_widget_hide(GTK_WIDGET(sun->tray_icon));
+#else
         gtk_widget_hide_all(GTK_WIDGET(sun->tray_icon));
+#endif
         run_gslapt("upgrade");
     }
 
@@ -128,7 +132,7 @@ gboolean show_notification(gpointer data)
     n = notify_notification_new(
         _("New updates available"),
         _("Click on the update icon to see the available updates"),
-        "info", NULL);
+        "info");
 
     GError *error = NULL;
     if (notify_notification_show(n, &error) != TRUE) {
@@ -238,7 +242,11 @@ int main(int argc, char *argv[])
     sun->updates_pixbuf = gdk_pixbuf_new_from_file(SUN_UPDATE_ICON, NULL);
     sun->running_pixbuf = gdk_pixbuf_new_from_file(SUN_RUNNING_ICON, NULL);
     gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->updates_pixbuf);
+#if GTK_CHECK_VERSION(3,0,0)
+    gtk_status_icon_set_tooltip_text(sun->tray_icon, _("Updates available"));
+#else
     gtk_status_icon_set_tooltip(sun->tray_icon, _("Updates available"));
+#endif
     gtk_status_icon_set_visible(sun->tray_icon, FALSE);
 
     g_signal_connect(G_OBJECT(sun->tray_icon), "activate", G_CALLBACK(tray_clicked), &sun);

@@ -44,9 +44,30 @@ AC_SUBST(GLIB_LIBS)
 PKG_CHECK_MODULES(DBUS, [dbus-1 dbus-glib-1])
 AC_SUBST(DBUS_CFLAGS)
 AC_SUBST(DBUS_LIBS)
-PKG_CHECK_MODULES(GTK, [gtk+-2.0 gdk-pixbuf-2.0])
+
+gtk2_modules="gtk+-2.0 >= 2.24.0"
+gtk3_modules="gtk+-3.0 >= 3.4.0"
+AM_CONDITIONAL(GTK3, true)
+AM_CONDITIONAL(GTK2, false)
+AC_ARG_ENABLE(gtk3,
+   [  --enable-gtk3                   Build with GTK3 support],
+   [enable_gtk3=$enableval], [enable_gtk3=yes])
+AC_ARG_ENABLE(gtk2,
+   [  --enable-gtk2                   Build with GTK2 support],
+   [enable_gtk2=$enableval], [enable_gtk2=no])
+if test x"$enable_gtk2" = x"yes"; then
+PKG_CHECK_MODULES(GTK, [gtk+-3.0 gdk-pixbuf-2.0])
+  PKG_CHECK_MODULES(GTK, [$gtk2_modules])
+  AM_CONDITIONAL(GTK3, false)
+  AM_CONDITIONAL(GTK2, true)
+else
+  PKG_CHECK_MODULES(GTK, [$gtk3_modules])
+  AM_CONDITIONAL(GTK3, true)
+  AM_CONDITIONAL(GTK2, false)
+fi
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
+
 AC_ARG_WITH(
   [notification],
   AC_HELP_STRING([--with-notification], [use notification (default is no)]),
