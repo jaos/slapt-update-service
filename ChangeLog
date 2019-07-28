@@ -1,4 +1,20 @@
 
+0.5.1 Jul 28, 2019:
+ * update naming convention for data structures
+ * build requires python3
+ * s/slapt_pkg_into_t/slapt_pkg_t/g
+ * bump to version 0.5.1
+ * updated glib, libnotify, and gtk support
+ * port to slapt-get 0.11.1
+ * check for round in libm
+ * Add russian translation
+ * fix typo in translation files comment
+ * account for gtk/gdk-pixbuf split
+ * added hebrew translation by Isratine Citizen
+ * updated copyright date to 2012
+ * bumped copyright date to 2011
+ * added hu translation from Peter Polonkai
+
 0.5.0c Aug 30, 2012
  * account for gtk/gdk-pixbuf split
  * added hebrew translation by Isratine Citizen
