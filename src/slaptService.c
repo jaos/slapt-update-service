@@ -32,13 +32,13 @@ static gboolean slapt_service_real_check_for_updates(SlaptService *self, guint *
     slapt_vector_t *installed_pkgs = NULL;
     slapt_vector_t *avail_pkgs = NULL;
     slapt_transaction_t *tran = NULL;
-    slapt_rc_config *rc = NULL;
+    slapt_config_t *rc = NULL;
 
     g_assert(SLAPT_IS_SERVICE(self));
 
     *count = 0;
 
-    rc = slapt_read_rc_config(SLAPT_SERVICE_DEFAULT_RC);
+    rc = slapt_config_t_read(SLAPT_SERVICE_DEFAULT_RC);
     if ((chdir(rc->working_dir)) == -1)
         goto SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE;
 
@@ -90,19 +90,19 @@ SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE:
     if (tran != NULL)
         slapt_free_transaction(tran);
     if (rc != NULL)
-        slapt_free_rc_config(rc);
+        slapt_config_t_free(rc);
 
     return TRUE;
 }
 
 static gboolean slapt_service_real_refresh_cache(SlaptService *self)
 {
-    slapt_rc_config *rc = NULL;
+    slapt_config_t *rc = NULL;
     int r = 0;
 
     g_assert(SLAPT_IS_SERVICE(self));
 
-    rc = slapt_read_rc_config(SLAPT_SERVICE_DEFAULT_RC);
+    rc = slapt_config_t_read(SLAPT_SERVICE_DEFAULT_RC);
 
     if ((chdir(rc->working_dir)) == -1)
         return FALSE;
@@ -110,7 +110,7 @@ static gboolean slapt_service_real_refresh_cache(SlaptService *self)
     if (slapt_update_pkg_cache(rc) != 0)
         fprintf(stderr, "failed to update package cache... handle me\n");
 
-    slapt_free_rc_config(rc);
+    slapt_config_t_free(rc);
 
     return TRUE;
 }
