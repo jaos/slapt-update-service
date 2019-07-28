@@ -53,9 +53,9 @@ static gboolean slapt_service_real_check_for_updates(SlaptService *self, guint *
     if (tran == NULL)
         goto SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE;
 
-    slapt_vector_t_foreach(slapt_pkg_info_t *, installed_pkg, installed_pkgs) {
-        slapt_pkg_info_t *update_pkg = NULL;
-        slapt_pkg_info_t *newer_installed_pkg = NULL;
+    slapt_vector_t_foreach(slapt_pkg_t *, installed_pkg, installed_pkgs) {
+        slapt_pkg_t *update_pkg = NULL;
+        slapt_pkg_t *newer_installed_pkg = NULL;
 
         if (slapt_is_excluded(rc, installed_pkg))
             continue;
