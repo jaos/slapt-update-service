@@ -38,12 +38,9 @@ AC_CHECK_LIB(gpgme,gpgme_new, [
 ], [AC_MSG_WARN(gpg support disabled)])
 AC_CHECK_LIB(slapt,slapt_vector_t_init, [], [AC_MSG_ERROR(libslapt 0.11.1 or greater is required)])
 
-PKG_CHECK_MODULES(GLIB, [glib-2.0 gobject-2.0 gthread-2.0])
+PKG_CHECK_MODULES(GLIB, [glib-2.0 gobject-2.0 gthread-2.0 gio-2.0 gio-unix-2.0])
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
-PKG_CHECK_MODULES(DBUS, [dbus-1 dbus-glib-1])
-AC_SUBST(DBUS_CFLAGS)
-AC_SUBST(DBUS_LIBS)
 
 gtk2_modules="gtk+-2.0 >= 2.24.0"
 gtk3_modules="gtk+-3.0 >= 3.4.0"

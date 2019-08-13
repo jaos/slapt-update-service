@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-
+<?generation gdbus-codegen --interface-prefix org.jaos --generate-c-code slaptService slapt-service.xml ?>
 <node name="/org/jaos/SlaptService">
-
   <interface name="org.jaos.SlaptService">
-    <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="slapt_service"/>
     <method name="CheckForUpdates">
       <arg type="u" name="count" direction="out" />
     </method>
     <method name="RefreshCache"/>
   </interface>
 </node>
-
