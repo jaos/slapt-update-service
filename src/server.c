@@ -16,6 +16,7 @@
  */
 #include "slaptService.h"
 #include "common.h"
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +40,9 @@ int main(void)
 #endif
 #ifdef SLAPT_HAS_GPGME
     gpgme_check_version(NULL);
+#ifdef ENABLE_NLS
+    gpgme_set_locale(NULL, LC_CTYPE, setlocale(LC_CTYPE, NULL));
+#endif
 #endif
 
     bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);

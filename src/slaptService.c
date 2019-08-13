@@ -104,6 +104,7 @@ static gboolean slapt_service_real_refresh_cache(SlaptService *self)
 
     rc = slapt_config_t_read(SLAPT_SERVICE_DEFAULT_RC);
 
+    slapt_working_dir_init(rc);
     if ((chdir(rc->working_dir)) == -1)
         return FALSE;
 
