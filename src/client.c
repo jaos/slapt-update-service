@@ -53,7 +53,15 @@ static void hide_sun(void);
 static void run_gslapt(const char *action)
 {
     gchar *argv[4];
-#if defined(HAS_GNOMESU)
+#if defined(HAS_GSLAPTPOLKIT)
+    argv[0] = "/usr/bin/gslapt-polkit";
+    if (strcmp(action, "upgrade") == 0) {
+        argv[1] = "--upgrade";
+    } else {
+        argv[1] = NULL;
+    }
+    argv[2] = NULL;
+#elif defined(HAS_GNOMESU)
     argv[0] = "/usr/bin/gnomesu";
     argv[1] = "-c";
     if (strcmp(action, "upgrade") == 0) {

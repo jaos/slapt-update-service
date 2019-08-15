@@ -110,6 +110,12 @@ AC_ARG_WITH(
   [ac_cv_prog_KDESU=$withval],
   [AC_CHECK_PROG([KDESU], [kdesu], yes, [no])]
 )
+AC_ARG_WITH(
+  [gslapt-polkit],
+  AC_HELP_STRING([--with-gslapt-polkit], [use gslapt-polkit helper (default is auto)]),
+  [ac_cv_prog_GSLAPTPOLKIT=$withval],
+  [AC_CHECK_PROG([GSLAPTPOLKIT], [gslapt-polkit], yes, [no])]
+)
 
 if test "$ac_cv_prog_GNOMESU" = "yes"; then
   AC_DEFINE(HAS_GNOMESU, 1, [has gnomesu])
@@ -120,8 +126,11 @@ fi
 if test "$ac_cv_prog_KDESU" = "yes"; then
   AC_DEFINE(HAS_KDESU, 1, [has kdesu])
 fi
-if test "$ac_cv_prog_GNOMESU" = "no" -a "$ac_cv_prog_GKSU" = "no" -a "$ac_cv_prog_KDESU" = "no"; then
-  AC_MSG_ERROR([gnomesu, gksu, or kdesu is required.  please specify one with --with-APPNAME=yes.])
+if test "$ac_cv_prog_GSLAPTPOLKIT" = "yes"; then
+  AC_DEFINE(HAS_GSLAPTPOLKIT, 1, [has gslapt-polkit helper])
+fi
+if test "$ac_cv_prog_GNOMESU" = "no" -a "$ac_cv_prog_GKSU" = "no" -a "$ac_cv_prog_KDESU" = "no" -a "$ac_cv_prog_GSLAPTPOLKIT" = "no"; then
+  AC_MSG_ERROR([gnomesu, gksu, kdesu, or gslapt-polkit is required.  please specify one with --with-APPNAME=yes.])
 fi
 
 # translations
