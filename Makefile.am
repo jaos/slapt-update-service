@@ -3,14 +3,16 @@ SUBDIRS = po data src
 pixmapdir = $(PIXMAPS_DIR)
 pixmap_DATA = pixmaps/slapt-update-notifier-update.png pixmaps/slapt-update-notifier-idle.png
 
-SLACK_FILES = doinst.sh slack-desc slack-required
-EXTRA_DIST = $(pixmap_DATA) $(SLACK_FILES)
+desktopdir = $(sysconfdir)/xdg/autostart
+desktop_DATA = slapt-update-service.desktop
+
+SLACK_FILES = slack-desc slack-required
+EXTRA_DIST = $(pixmap_DATA) $(SLACK_FILES) $(desktop_DATA)
 
 PKGDIR=`pwd`/pkg
 pkg: all
 	$(MAKE) install DESTDIR=$(PKGDIR)
 	$(mkinstalldirs) $(PKGDIR)/install
-	install doinst.sh $(PKGDIR)/install/
 	install slack-desc $(PKGDIR)/install/
 	install slack-required $(PKGDIR)/install/
 	-chown -R $$(stat --format "%u:%g" $(bindir)) $(PKGDIR)/$(bindir)
