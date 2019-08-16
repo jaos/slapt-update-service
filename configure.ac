@@ -76,6 +76,11 @@ AS_IF([test "x$with_notification" = "xyes"], [
   AC_SUBST(NOTIFY_LIBS)
 ])
 
+# too many forgotten overrides... just make it the default
+if test "$sysconfdir" = '${prefix}/etc'
+then
+    sysconfdir=/etc
+fi
 
 AS_AC_EXPAND(DATADIR, $datadir)
 DBUS_SYSTEM_SERVICES_DIR="$DATADIR/dbus-1/system-services"
