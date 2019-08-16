@@ -16,5 +16,5 @@ pkg: all
 	-chown -R $$(stat --format "%u:%g" $(bindir)) $(PKGDIR)/$(bindir)
 	-chown -R $$(stat --format "%u:%g" $(sbindir)) $(PKGDIR)/$(sbindir)
 	-find $(PKGDIR)/$(bindir) $(PKGDIR)/$(sbindir)/ -type f -exec strip --strip-unneeded {} \;
-	( cd $(PKGDIR) && /sbin/makepkg -l y -c n ../@PACKAGE@-@PACKAGE_VERSION@-@host_cpu@-1.tgz )
+	( cd $(PKGDIR) && /sbin/makepkg -l y -c n ../@PACKAGE@-@PACKAGE_VERSION@-@host_cpu@-1.txz )
 
