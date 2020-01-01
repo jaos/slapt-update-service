@@ -33,8 +33,8 @@
 #define _(x) gettext(x)
 #define SUN_RUNNING_ICON PIXMAPS_DIR "/slapt-update-notifier-idle.png"
 #define SUN_UPDATE_ICON PIXMAPS_DIR "/slapt-update-notifier-update.png"
-#define SUN_TIMEOUT_RECHECK 3600000 /* 1000*(1*60*60), 1 hour */
-#define SUN_TIMEOUT_DBUS 300000 /* 1000*(1*5*60), 5 minutes */
+#define SUN_TIMEOUT_RECHECK_SEC 360 // 1 hour
+#define SUN_TIMEOUT_DBUS_MSEC 300000 /* 1000*(1*5*60), 5 minutes */
 #define NOTIFICATION_DEFAULT "default"
 #define NOTIFICATION_IGNORE "ignore"
 #define NOTIFICATION_SHOW_UPDATES "show updates"
@@ -48,7 +48,22 @@ struct slapt_update_notifier {
 };
 
 static struct slapt_update_notifier *sun = NULL;
-static void hide_sun(void);
+
+static void set_hidden(void)
+{
+    gtk_status_icon_set_visible(sun->tray_icon, FALSE);
+
+#ifdef USE_LIBNOTIFY
+    NotifyNotification *n = g_object_get_data(G_OBJECT(sun->tray_icon), "notification");
+    if (n != NULL) {
+        GError *error = NULL;
+        if (notify_notification_close(n, &error) != TRUE) {
+            fprintf(stderr, "failed to send notification: %s\n", error->message);
+            g_error_free(error);
+        }
+    }
+#endif
+}
 
 static void run_gslapt(const char *action)
 {
@@ -91,7 +106,7 @@ static void run_gslapt(const char *action)
 #endif
 
     g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, NULL);
-    hide_sun();
+    set_hidden();
 }
 
 void tray_clicked(GtkStatusIcon *status_icon, gpointer data)
@@ -159,44 +174,43 @@ void tray_destroy(struct slapt_update_notifier *sun)
     g_object_unref(G_OBJECT(sun->tray_icon));
 }
 
-static void hide_sun(void)
+static void set_working(void)
 {
-    gtk_status_icon_set_visible(sun->tray_icon, FALSE);
-
-#ifdef USE_LIBNOTIFY
-    NotifyNotification *n = g_object_get_data(G_OBJECT(sun->tray_icon), "notification");
-    if (n != NULL) {
-        GError *error = NULL;
-        if (notify_notification_close(n, &error) != TRUE) {
-            fprintf(stderr, "failed to send notification: %s\n", error->message);
-            g_error_free(error);
-        }
-    }
-#endif
+    gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->running_pixbuf);
+    gtk_status_icon_set_visible(sun->tray_icon, TRUE);
+    while (gtk_events_pending())
+        gtk_main_iteration();
 }
 
-void menuitem_hide_callback(GObject *g, void *data)
+static void set_updates_pending(void)
 {
-    hide_sun();
+    gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->updates_pixbuf);
+    gtk_status_icon_set_visible(sun->tray_icon, TRUE);
+#if GTK_CHECK_VERSION(3,0,0)
+    gtk_status_icon_set_tooltip_text(sun->tray_icon, _("Updates available"));
+#else
+    gtk_status_icon_set_tooltip(sun->tray_icon, _("Updates available"));
+#endif
+
+#ifdef USE_LIBNOTIFY
+    show_notification(NULL);
+#endif
+    while (gtk_events_pending())
+        gtk_main_iteration();
 }
 
 static gboolean check_for_updates(gpointer userdata)
 {
-    gboolean callback_complete = TRUE;
-    if (userdata != NULL)
-        callback_complete = FALSE;
-
     /* set working icon */
-    gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->running_pixbuf);
-    gtk_status_icon_set_visible(sun->tray_icon, TRUE);
+    set_working();
 
     GError *refresh_error = NULL;
     gboolean r = slapt_service_call_refresh_cache_sync(sun->proxy, NULL, &refresh_error);
     if (!r) {
         g_warning("refresh cache failed: %s", refresh_error->message);
         g_error_free(refresh_error);
-        gtk_status_icon_set_visible(sun->tray_icon, FALSE);
-        return callback_complete;
+        set_hidden();
+        return TRUE;
     }
 
     GError *updates_error = NULL;
@@ -205,18 +219,33 @@ static gboolean check_for_updates(gpointer userdata)
     if (!r) {
         g_warning("check for updates failed: %s", updates_error->message);
         g_error_free(updates_error);
-        return callback_complete;
+        set_hidden();
+        return TRUE;
     }
     if (count > 0) {
-        gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->updates_pixbuf);
-        gtk_status_icon_set_visible(sun->tray_icon, TRUE);
-#ifdef USE_LIBNOTIFY
-        show_notification(NULL);
-#endif
+        set_updates_pending();
     } else {
-        gtk_status_icon_set_visible(sun->tray_icon, FALSE);
+        set_hidden();
     }
-    return callback_complete;
+    return TRUE;
+}
+
+static gboolean check_for_updates_once(gpointer userdata)
+{
+    check_for_updates(NULL);
+    return FALSE;
+}
+
+/*
+void menuitem_check_callback(GObject *g, void *dat)
+{
+    check_for_updates_once(NULL);
+}
+*/
+
+void menuitem_hide_callback(GObject *g, void *data)
+{
+    set_hidden();
 }
 
 int main(int argc, char *argv[])
@@ -229,21 +258,16 @@ int main(int argc, char *argv[])
     sun = malloc(sizeof *sun);
     sun->updates_pixbuf = gdk_pixbuf_new_from_file(SUN_UPDATE_ICON, NULL);
     sun->running_pixbuf = gdk_pixbuf_new_from_file(SUN_RUNNING_ICON, NULL);
-    sun->tray_icon = gtk_status_icon_new_from_pixbuf(sun->running_pixbuf);
-#if GTK_CHECK_VERSION(3,0,0)
-    gtk_status_icon_set_tooltip_text(sun->tray_icon, _("Updates available"));
-#else
-    gtk_status_icon_set_tooltip(sun->tray_icon, _("Updates available"));
-#endif
+    sun->tray_icon = gtk_status_icon_new();
 
-    g_signal_connect(G_OBJECT(sun->tray_icon), "activate", G_CALLBACK(tray_clicked), &sun);
-    g_signal_connect(G_OBJECT(sun->tray_icon), "popup-menu", G_CALLBACK(tray_menu), &sun);
-    gtk_status_icon_set_visible(sun->tray_icon, TRUE);
+    g_signal_connect(G_OBJECT(sun->tray_icon), "activate", G_CALLBACK(tray_clicked), NULL);
+    g_signal_connect(G_OBJECT(sun->tray_icon), "popup-menu", G_CALLBACK(tray_menu), NULL);
+    set_working();
 
     sun->menu = gtk_menu_new();
-    GtkWidget *menuitem = gtk_menu_item_new_with_label(_("Hide"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(sun->menu), menuitem);
-    g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menuitem_hide_callback), sun);
+    GtkWidget *hide_menuitem = gtk_menu_item_new_with_label(_("Hide"));
+    gtk_menu_shell_append(GTK_MENU_SHELL(sun->menu), hide_menuitem);
+    g_signal_connect(G_OBJECT(hide_menuitem), "activate", G_CALLBACK(menuitem_hide_callback), NULL);
     gtk_widget_show_all(sun->menu);
 
     GError *error = NULL;
@@ -259,11 +283,10 @@ int main(int argc, char *argv[])
 #endif
         return -1;
     }
-    g_dbus_proxy_set_default_timeout(sun->proxy, SUN_TIMEOUT_DBUS);
+    g_dbus_proxy_set_default_timeout(sun->proxy, SUN_TIMEOUT_DBUS_MSEC);
 
-    gboolean run_once = TRUE;
-    g_idle_add((GSourceFunc)check_for_updates, &run_once);
-    g_timeout_add(SUN_TIMEOUT_RECHECK, (GSourceFunc)check_for_updates, NULL);
+    g_timeout_add_seconds(0, (GSourceFunc)check_for_updates_once, NULL);
+    g_timeout_add_seconds(SUN_TIMEOUT_RECHECK_SEC, (GSourceFunc)check_for_updates, NULL);
     gtk_main();
 
     tray_destroy(sun);
