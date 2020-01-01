@@ -35,9 +35,6 @@
 #define SUN_UPDATE_ICON PIXMAPS_DIR "/slapt-update-notifier-update.png"
 #define SUN_TIMEOUT_RECHECK_SEC 360 // 1 hour
 #define SUN_TIMEOUT_DBUS_MSEC 300000 /* 1000*(1*5*60), 5 minutes */
-#define NOTIFICATION_DEFAULT "default"
-#define NOTIFICATION_IGNORE "ignore"
-#define NOTIFICATION_SHOW_UPDATES "show updates"
 
 struct slapt_update_notifier {
     GtkStatusIcon *tray_icon;
@@ -123,26 +120,6 @@ void tray_menu(GtkStatusIcon *status_icon, guint button, guint activate_time, gp
 }
 
 #ifdef USE_LIBNOTIFY
-static void notify_callback(NotifyNotification *handle, const char *action, void *user_data)
-{
-    if (strcmp(action, NOTIFICATION_SHOW_UPDATES) == 0) {
-#if GTK_CHECK_VERSION(3,0,0)
-        gtk_widget_hide(GTK_WIDGET(sun->tray_icon));
-#else
-        gtk_widget_hide_all(GTK_WIDGET(sun->tray_icon));
-#endif
-        run_gslapt("upgrade");
-    }
-
-    if (handle != NULL) {
-        GError *error = NULL;
-        if (notify_notification_close(handle, &error) != TRUE) {
-            fprintf(stderr, "failed to send notification: %s\n", error->message);
-            g_error_free(error);
-        }
-    }
-}
-
 gboolean show_notification(gpointer data)
 {
     NotifyNotification *n;
