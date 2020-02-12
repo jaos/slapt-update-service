@@ -25,19 +25,15 @@ Requirements:
  To build from source, you must have these packages installed:
   autoconf automake libtool m4 gettext gettext-tools pkgconfig
   intltool atk glib2 gtk+2 pango x11 zlib dbus-glib openssl
-  curl slapt-get python3
+  curl slapt-get python3 polkit
 
 Building:
-  Run ./configure.  you must specify the use of one of the following graphical
-  su/sudo applications: gnomesu, gksu, kdesu.  For example:
-    ./configure --prefix=/usr --sysconfdir=/etc --with-gnomesu=yes
+  Run ./configure. By default polkit will be used. See the configure
+  help output for more information.
+
+  ./configure --prefix=/usr --sysconfdir=/etc
   Now run make.
 
 Installing:
   You can either run 'make install' or 'make pkg'.  The 'pkg' make target
   will create a Slackware package in ./pkg.
-
-Caveats:
-  Right now the graphical su/sudo application gnomesu is hardcoded within
-  slapt-update-service based on the build time configure option.
-
