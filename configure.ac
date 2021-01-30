@@ -42,26 +42,7 @@ PKG_CHECK_MODULES(GLIB, [glib-2.0 gobject-2.0 gthread-2.0 gio-2.0 gio-unix-2.0])
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
-gtk2_modules="gtk+-2.0 >= 2.24.0"
-gtk3_modules="gtk+-3.0 >= 3.4.0"
-AM_CONDITIONAL(GTK3, true)
-AM_CONDITIONAL(GTK2, false)
-AC_ARG_ENABLE(gtk3,
-   [  --enable-gtk3                   Build with GTK3 support],
-   [enable_gtk3=$enableval], [enable_gtk3=yes])
-AC_ARG_ENABLE(gtk2,
-   [  --enable-gtk2                   Build with GTK2 support],
-   [enable_gtk2=$enableval], [enable_gtk2=no])
-if test x"$enable_gtk2" = x"yes"; then
-PKG_CHECK_MODULES(GTK, [gtk+-3.0 gdk-pixbuf-2.0])
-  PKG_CHECK_MODULES(GTK, [$gtk2_modules])
-  AM_CONDITIONAL(GTK3, false)
-  AM_CONDITIONAL(GTK2, true)
-else
-  PKG_CHECK_MODULES(GTK, [$gtk3_modules])
-  AM_CONDITIONAL(GTK3, true)
-  AM_CONDITIONAL(GTK2, false)
-fi
+PKG_CHECK_MODULES(GTK, [gtk+-3.0 >= 3.4.0])
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 
@@ -96,47 +77,9 @@ PIXMAPS_DIR="$prefix/share/pixmaps"
 AC_SUBST(PIXMAPS_DIR)
 AC_DEFINE_UNQUOTED(PIXMAPS_DIR, "$PIXMAPS_DIR", [Where pixmap image files are installed])
 
-# options
-AC_ARG_WITH(
-  [gnomesu], 
-  AC_HELP_STRING([--with-gnomesu], [use gnomesu (default is auto)]),
-  [ac_cv_prog_GNOMESU=$withval],
-  [AC_CHECK_PROG([GNOMESU], [gnomesu], yes, [no])]
-)
-AC_ARG_WITH(
-  [gksu], 
-  AC_HELP_STRING([--with-gksu], [use gksu (default is auto)]),
-  [ac_cv_prog_GKSU=$withval],
-  [AC_CHECK_PROG([GKSU], [gksu], yes, [no])]
-)
-AC_ARG_WITH(
-  [kdesu], 
-  AC_HELP_STRING([--with-kdesu], [use kdesu (default is auto)]),
-  [ac_cv_prog_KDESU=$withval],
-  [AC_CHECK_PROG([KDESU], [kdesu], yes, [no])]
-)
-AC_ARG_WITH(
-  [gslapt-polkit],
-  AC_HELP_STRING([--with-gslapt-polkit], [use gslapt-polkit helper (default is auto)]),
-  [ac_cv_prog_GSLAPTPOLKIT=$withval],
-  [AC_CHECK_PROG([GSLAPTPOLKIT], [gslapt-polkit], yes, [no])]
-)
-
-if test "$ac_cv_prog_GNOMESU" = "yes"; then
-  AC_DEFINE(HAS_GNOMESU, 1, [has gnomesu])
-fi
-if test "$ac_cv_prog_GKSU" = "yes"; then
-  AC_DEFINE(HAS_GKSU, 1, [has gksu])
-fi
-if test "$ac_cv_prog_KDESU" = "yes"; then
-  AC_DEFINE(HAS_KDESU, 1, [has kdesu])
-fi
-if test "$ac_cv_prog_GSLAPTPOLKIT" = "yes"; then
-  AC_DEFINE(HAS_GSLAPTPOLKIT, 1, [has gslapt-polkit helper])
-fi
-if test "$ac_cv_prog_GNOMESU" = "no" -a "$ac_cv_prog_GKSU" = "no" -a "$ac_cv_prog_KDESU" = "no" -a "$ac_cv_prog_GSLAPTPOLKIT" = "no"; then
-  AC_MSG_ERROR([gnomesu, gksu, kdesu, or gslapt-polkit is required.  please specify one with --with-APPNAME=yes.])
-fi
+AC_PATH_PROG([GSLAPT_POLKIT_PATH], [gslapt-polkit])
+AC_SUBST(GSLAPT_POLKIT_PATH)
+AC_DEFINE_UNQUOTED(GSLAPT_POLKIT_PATH, "$GSLAPT_POLKIT_PATH", [gslapt-polkit helper path])
 
 # translations
 GETTEXT_PACKAGE=slapt-update-notifier

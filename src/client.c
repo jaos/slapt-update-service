@@ -14,9 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; If not, see <http://www.gnu.org/licenses/>
  */
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "config.h"
 
 #include "slaptService.h"
 #include "common.h"
@@ -65,43 +63,13 @@ static void set_hidden(void)
 static void run_gslapt(const char *action)
 {
     gchar *argv[4];
-#if defined(HAS_GSLAPTPOLKIT)
-    argv[0] = "/usr/bin/gslapt-polkit";
+    argv[0] = GSLAPT_POLKIT_PATH;
     if (strcmp(action, "upgrade") == 0) {
         argv[1] = "--upgrade";
     } else {
         argv[1] = NULL;
     }
     argv[2] = NULL;
-#elif defined(HAS_GNOMESU)
-    argv[0] = "/usr/bin/gnomesu";
-    argv[1] = "-c";
-    if (strcmp(action, "upgrade") == 0) {
-        argv[2] = "/usr/sbin/gslapt --upgrade";
-    } else {
-        argv[2] = "/usr/sbin/gslapt";
-    }
-    argv[3] = NULL;
-#elif defined(HAS_GKSU)
-    argv[0] = "/usr/bin/gksu";
-    if (strcmp(action, "upgrade") == 0) {
-        argv[1] = "/usr/sbin/gslapt --upgrade";
-    } else {
-        argv[1] = "/usr/sbin/gslapt";
-    }
-    argv[2] = NULL;
-#elif defined(HAS_KDESU)
-    argv[0] = "/usr/bin/kdesu";
-    if (strcmp(action, "upgrade") == 0) {
-        argv[1] = "/usr/sbin/gslapt --upgrade";
-    } else {
-        argv[1] = "/usr/sbin/gslapt";
-    }
-    argv[2] = NULL;
-#else
-#error unable to create command to run gslapt
-#endif
-
     g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, NULL);
     set_hidden();
 }
