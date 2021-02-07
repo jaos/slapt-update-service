@@ -1,4 +1,4 @@
-gtk+2
+gtk+3
 libnotify
 gslapt
-polkit | libgnomesu | gksu | kdesu
+polkit
