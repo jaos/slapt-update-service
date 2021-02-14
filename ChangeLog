@@ -1,3 +1,9 @@
+0.5.2 Feb 13, 2021:
+ * meson build support
+ * updates for slapt-get api changes
+ * use gslapt polkit helper
+ * port to gdbus
+ * add /etc/xdg/autostart .desktop file
 
 0.5.1 Jul 28, 2019:
  * update naming convention for data structures

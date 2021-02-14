@@ -7,7 +7,8 @@ desktopdir = $(sysconfdir)/xdg/autostart
 desktop_DATA = slapt-update-service.desktop
 
 SLACK_FILES = slack-desc slack-required
-EXTRA_DIST = $(pixmap_DATA) $(SLACK_FILES) $(desktop_DATA)
+MESON_FILES = data/meson.build meson.build pixmaps/meson.build po/meson.build src/meson.build
+EXTRA_DIST = $(pixmap_DATA) $(SLACK_FILES) $(desktop_DATA) $(MESON_FILES)
 
 PKGDIR=`pwd`/pkg
 pkg: all
