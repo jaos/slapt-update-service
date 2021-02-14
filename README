@@ -22,18 +22,32 @@ About:
  starts upgrading with gslapt.
 
 Requirements:
- To build from source, you must have these packages installed:
-  autoconf automake libtool m4 gettext gettext-tools pkgconfig
-  intltool atk glib2 gtk+2 pango x11 zlib dbus-glib openssl
-  curl slapt-get python3 polkit
+ To build from source, you must have these packages mentioned in slack-required
+ installed.
 
-Building:
-  Run ./configure. By default polkit will be used. See the configure
-  help output for more information.
+Building and installing:
+  You can install via meson or autotools (deprecated).
 
-  ./configure --prefix=/usr --sysconfdir=/etc
-  Now run make.
+  * Meson
 
-Installing:
-  You can either run 'make install' or 'make pkg'.  The 'pkg' make target
-  will create a Slackware package in ./pkg.
+      meson setup build # or any dir of your choosing
+      meson compile -C build # or `ninja -C build` for older meson releases
+      meson install -C build # or `ninja -C build install`  for older meson releases
+
+      Meson/ninja supports `DESTDIR=/path meson install -C build`
+
+      TIP:
+      slapt-update-service.Slackbuild will build with meson create a Slackware package.
+      Run with sudo or as a privileged user.
+
+  * autotools (deprecated)
+
+      ./autogen.sh # if building from git
+      ./configure
+      make
+      make install # as privileged user
+
+      The Makefile honors DESTDIR.
+
+      TIP:
+      `make pkg` (as privileged user) will create a Slackware package.
