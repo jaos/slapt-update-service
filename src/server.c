@@ -60,7 +60,7 @@ static gboolean handle_check_for_updates(SlaptService *srv, GDBusMethodInvocatio
     if (avail_pkgs->size == 0)
         goto SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE;
 
-    slapt_transaction_t *tran = slapt_init_transaction();
+    slapt_transaction_t *tran = slapt_transaction_t_init();
     if (tran == NULL)
         goto SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE;
 
@@ -70,16 +70,16 @@ static gboolean handle_check_for_updates(SlaptService *srv, GDBusMethodInvocatio
         if (slapt_is_excluded(rc, installed_pkg))
             continue;
         if ((newer_installed_pkg = slapt_get_newest_pkg(installed_pkgs, installed_pkg->name)) != NULL) {
-            if (slapt_cmp_pkgs(installed_pkg, newer_installed_pkg) < 0)
+            if (slapt_pkg_t_cmp(installed_pkg, newer_installed_pkg) < 0)
                 continue;
         }
         update_pkg = slapt_get_newest_pkg(avail_pkgs, installed_pkg->name);
         if (update_pkg != NULL) {
-            if (slapt_cmp_pkgs(installed_pkg, update_pkg) < 0) {
+            if (slapt_pkg_t_cmp(installed_pkg, update_pkg) < 0) {
                 if (slapt_is_excluded(rc, update_pkg))
                     continue;
-                if (slapt_add_deps_to_trans(rc, tran, avail_pkgs, installed_pkgs, update_pkg) == 0)
-                    slapt_add_upgrade_to_transaction(tran, installed_pkg, update_pkg);
+                if (slapt_transaction_t_add_dependencies(rc, tran, avail_pkgs, installed_pkgs, update_pkg) == 0)
+                    slapt_transaction_t_add_upgrade(tran, installed_pkg, update_pkg);
             } /* end if newer */
         } /* end upgrade pkg found */
     } /* end for installed_pkgs */
@@ -93,7 +93,7 @@ SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE:
     if (avail_pkgs != NULL)
         slapt_vector_t_free(avail_pkgs);
     if (tran != NULL)
-        slapt_free_transaction(tran);
+        slapt_transaction_t_free(tran);
     if (rc != NULL)
         slapt_config_t_free(rc);
 

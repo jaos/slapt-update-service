@@ -1,3 +1,6 @@
+0.5.3 Mar 12, 2021:
+ * misc symbol cleanup
+
 0.5.2 Feb 13, 2021:
  * meson build support
  * updates for slapt-get api changes
