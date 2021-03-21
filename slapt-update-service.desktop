@@ -2,10 +2,12 @@
 Encoding=UTF-8
 Version=0.9.4
 Type=Application
-Name=slapt-update-notifier
-Comment=checks for system package upgrades
+Name=Slapt-update-notifier
+GenericName=Slapt update notification service
+GenericName[ru]=Сервис уведомления обновлений Slapt
+Comment=Checks for system package upgrades
+Comment[ru]=Проверка обновлений системных пакетов
 Exec=/usr/bin/slapt-update-notifier
 StartupNotify=false
 Terminal=false
 Hidden=false
-
