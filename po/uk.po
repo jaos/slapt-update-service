@@ -1,0 +1,38 @@
+# slapt-update-service russian translation
+# Copyright (C) 2013 Jason Woodward
+# This file is distributed under the same license as the slapt-update-service package.
+#
+# Translators:
+# Dmytro Voitenko <dgv.at@ukr.net>, 2021
+msgid ""
+msgstr ""
+"Project-Id-Version: slapt-update-service 0.5.2\n"
+"Report-Msgid-Bugs-To: slapt-get-devel@software.jaos.org\n"
+"POT-Creation-Date: 2010-02-22 21:15-0500\n"
+"PO-Revision-Date: 2021-03-24 20:32+0200\n"
+"Last-Translator: Dmytro Voitenko <dgv.at@ukr.net>\n"
+"Language-Team: slapt-get-devel <slapt-get-devel@software.jaos.org>\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/client.c:96
+msgid "New updates available"
+msgstr "Доступні нові оновлення"
+
+#: src/client.c:97
+msgid "Click on the update icon to see the available updates"
+msgstr "Натисніть на значок, щоб побачити доступні оновлення"
+
+#: src/client.c:135
+msgid "Updates available"
+msgstr "Доступні оновлення"
+
+#: src/client.c:137
+msgid "Updates available"
+msgstr "Доступні оновлення"
+
+#: src/client.c:213
+msgid "Hide"
+msgstr "Сховати"
