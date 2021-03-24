@@ -29,10 +29,6 @@ msgstr "Натисніть на значок, щоб побачити досту
 msgid "Updates available"
 msgstr "Доступні оновлення"
 
-#: src/client.c:137
-msgid "Updates available"
-msgstr "Доступні оновлення"
-
 #: src/client.c:213
 msgid "Hide"
 msgstr "Сховати"
