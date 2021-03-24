@@ -7,7 +7,7 @@
 # Dmytro Voitenko <dgv.at@ukr.net>, 2021
 msgid ""
 msgstr ""
-"Project-Id-Version: slapt-update-service\n"
+"Project-Id-Version: slapt-update-service 0.5.2\n"
 "Report-Msgid-Bugs-To: slapt-get-devel@software.jaos.org\n"
 "POT-Creation-Date: 2010-02-22 21:15-0500\n"
 "PO-Revision-Date: 2021-03-24 20:33+0200\n"
@@ -27,10 +27,6 @@ msgid "Click on the update icon to see the available updates"
 msgstr "Щёлкните на значок, чтобы увидеть доступные обновления"
 
 #: src/client.c:135
-msgid "Updates available"
-msgstr "Доступны обновления"
-
-#: src/client.c:137
 msgid "Updates available"
 msgstr "Доступны обновления"
 
