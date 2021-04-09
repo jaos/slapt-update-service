@@ -9,5 +9,5 @@ configure_file(
   input: 'SlaptService.conf.in',
   output: 'SlaptService.conf',
   configuration: configuration,
-  install_dir: join_paths(get_option('sysconfdir'), 'dbus-1', 'system.d'),
+  install_dir: join_paths(dbus.get_pkgconfig_variable('datadir'), 'dbus-1', 'system.d'),
 )
