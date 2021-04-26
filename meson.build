@@ -1,5 +1,5 @@
 project('slapt-update-service', 'c',
-  version: '0.5.2',
+  version: '0.5.3',
   license: 'GPLv2',
   meson_version: '>= 0.53',
   default_options: [
