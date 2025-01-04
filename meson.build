@@ -3,9 +3,11 @@ project('slapt-update-service', 'c',
   license: 'GPLv2',
   meson_version: '>= 0.53',
   default_options: [
+    'c_std=gnu2x',
     'buildtype=debugoptimized',
-    'sysconfdir=/etc',
     'b_lto=true',
+    'sysconfdir=/etc',
+    'warning_level=3',
   ],
 )
 package = meson.project_name()
@@ -59,6 +61,65 @@ dbus = dependency('dbus-1')
 
 service_deps = [libcurl, zlib, openssl, libm, libgpgme, libslapt, glib, gobject, gthread, gio, gio_unix]
 client_deps = service_deps + [gtk3, libnotify]
+
+cflags = [
+  '-U_FORTIFY_SOURCE',
+  '-D_FORTIFY_SOURCE=3',
+  '-fcf-protection=full',
+  '-fstack-clash-protection',
+  '-fstack-protector-all',
+  '-ftrivial-auto-var-init=zero',
+  '-ftrapv',
+  '-ggdb3',
+  '-mshstk',
+
+  '-ffat-lto-objects',
+  '-fno-extended-identifiers',
+  '-fno-strict-aliasing',
+  '-fstrict-flex-arrays=3',
+  '-Warith-conversion',
+  '-Warray-bounds=2',
+  '-Wbidi-chars=any',
+  '-Wcast-align=strict',
+  '-Wconversion',
+  '-Wduplicated-cond',
+  '-Wduplicated-branches',
+  '-Wformat-nonliteral',
+  '-Wformat-overflow=2',
+  '-Wformat-security',
+  '-Wformat-truncation',
+  '-Wformat=2',
+  '-Wimplicit-function-declaration',
+  '-Wimplicit-fallthrough=3',
+  '-Wincompatible-pointer-types',
+  '-Winit-self',
+  '-Wint-conversion',
+  '-Wlogical-op',
+  '-Wmaybe-uninitialized',
+  '-Wmissing-field-initializers',
+  '-Wnull-dereference',
+  '-Wold-style-definition',
+  '-Wparentheses',
+  '-Wredundant-decls',
+  '-Wshadow',
+  '-Wshift-overflow=2',
+  '-Wstrict-overflow',
+  '-Wstrict-prototypes',
+  '-Wstringop-overflow=4',
+  '-Wswitch-default',
+  '-Wtrampolines',
+  '-Wundef',
+  '-Wwrite-strings',
+]
+add_project_arguments(cc.get_supported_arguments(cflags), language: 'c')
+add_project_link_arguments(cc.get_supported_link_arguments(cflags), language: 'c')
+lflags = ['-Wl,-z,defs',
+  '-Wl,-z,noexecstack',
+  '-Wl,-z,now',
+  '-Wl,-z,relro',
+  '-Wl,-z,separate-code',
+]
+add_project_link_arguments(cc.get_supported_link_arguments(lflags), language: 'c')
 
 subdir('po')
 subdir('src')

@@ -26,6 +26,7 @@
 
 static gboolean handle_refresh_cache(SlaptService *srv, GDBusMethodInvocation *meth, gpointer user_data)
 {
+    (void)user_data;
     slapt_config_t *rc = slapt_config_t_read(SLAPT_SERVICE_DEFAULT_RC);
     slapt_working_dir_init(rc);
     if ((chdir(rc->working_dir)) == -1) {
@@ -45,6 +46,7 @@ static gboolean handle_refresh_cache(SlaptService *srv, GDBusMethodInvocation *m
 
 static gboolean handle_check_for_updates(SlaptService *srv, GDBusMethodInvocation *meth, gpointer user_data)
 {
+    (void)user_data;
     guint count = 0;
     slapt_config_t *rc = slapt_config_t_read(SLAPT_SERVICE_DEFAULT_RC);
     slapt_working_dir_init(rc);
@@ -53,6 +55,8 @@ static gboolean handle_check_for_updates(SlaptService *srv, GDBusMethodInvocatio
         return TRUE;
     }
 
+    slapt_transaction_t *trxn = slapt_transaction_t_init();
+
     slapt_vector_t *installed_pkgs = slapt_get_installed_pkgs();
     slapt_vector_t *avail_pkgs = slapt_get_available_pkgs();
     if (avail_pkgs == NULL || installed_pkgs == NULL)
@@ -60,8 +64,7 @@ static gboolean handle_check_for_updates(SlaptService *srv, GDBusMethodInvocatio
     if (avail_pkgs->size == 0)
         goto SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE;
 
-    slapt_transaction_t *tran = slapt_transaction_t_init();
-    if (tran == NULL)
+    if (trxn == NULL)
         goto SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE;
 
     slapt_vector_t_foreach(slapt_pkg_t *, installed_pkg, installed_pkgs) {
@@ -78,22 +81,22 @@ static gboolean handle_check_for_updates(SlaptService *srv, GDBusMethodInvocatio
             if (slapt_pkg_t_cmp(installed_pkg, update_pkg) < 0) {
                 if (slapt_is_excluded(rc, update_pkg))
                     continue;
-                if (slapt_transaction_t_add_dependencies(rc, tran, avail_pkgs, installed_pkgs, update_pkg) == 0)
-                    slapt_transaction_t_add_upgrade(tran, installed_pkg, update_pkg);
+                if (slapt_transaction_t_add_dependencies(rc, trxn, avail_pkgs, installed_pkgs, update_pkg) == 0)
+                    slapt_transaction_t_add_upgrade(trxn, installed_pkg, update_pkg);
             } /* end if newer */
         } /* end upgrade pkg found */
     } /* end for installed_pkgs */
 
     /* count includes new installed as well as package upgrades */
-    count += tran->upgrade_pkgs->size + tran->install_pkgs->size;
+    count += trxn->upgrade_pkgs->size + trxn->install_pkgs->size;
 
 SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE:
     if (installed_pkgs != NULL)
         slapt_vector_t_free(installed_pkgs);
     if (avail_pkgs != NULL)
         slapt_vector_t_free(avail_pkgs);
-    if (tran != NULL)
-        slapt_transaction_t_free(tran);
+    if (trxn != NULL)
+        slapt_transaction_t_free(trxn);
     if (rc != NULL)
         slapt_config_t_free(rc);
 
@@ -103,12 +106,17 @@ SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE:
 
 static void on_name_lost(GDBusConnection *c, const gchar *name, gpointer user_data)
 {
+    (void)c;
+    (void)name;
+    (void)user_data;
     g_warning("server name lost");
     exit(1);
 }
 
 static void on_name_acquired(GDBusConnection *c, const gchar *name, gpointer user_data)
 {
+    (void)name;
+    (void)user_data;
     SlaptService *srv = slapt_service_skeleton_new();
     g_signal_connect(srv, "handle-check-for-updates", G_CALLBACK(handle_check_for_updates), NULL);
     g_signal_connect(srv, "handle-refresh-cache", G_CALLBACK(handle_refresh_cache), NULL);

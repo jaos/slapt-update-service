@@ -109,14 +109,14 @@ gboolean show_notification(gpointer data)
 }
 #endif
 
-void tray_destroy(struct slapt_update_notifier *sun)
+void tray_destroy(struct slapt_update_notifier *sun_instance)
 {
-    if (sun->updates_pixbuf)
-        g_object_unref(G_OBJECT(sun->updates_pixbuf));
-    if (sun->running_pixbuf)
-        g_object_unref(G_OBJECT(sun->running_pixbuf));
+    if (sun_instance->updates_pixbuf)
+        g_object_unref(G_OBJECT(sun_instance->updates_pixbuf));
+    if (sun_instance->running_pixbuf)
+        g_object_unref(G_OBJECT(sun_instance->running_pixbuf));
 
-    g_object_unref(G_OBJECT(sun->tray_icon));
+    g_object_unref(G_OBJECT(sun_instance->tray_icon));
 }
 
 static void set_working(void)
@@ -146,6 +146,7 @@ static void set_updates_pending(void)
 
 static gboolean check_for_updates(gpointer userdata)
 {
+    (void)userdata;
     /* set working icon */
     set_working();
 
@@ -228,7 +229,7 @@ int main(int argc, char *argv[])
 #endif
         return -1;
     }
-    g_dbus_proxy_set_default_timeout(sun->proxy, SUN_TIMEOUT_DBUS_MSEC);
+    g_dbus_proxy_set_default_timeout((GDBusProxy *)sun->proxy, SUN_TIMEOUT_DBUS_MSEC);
 
     g_timeout_add_seconds(0, (GSourceFunc)check_for_updates_once, NULL);
     g_timeout_add_seconds(SUN_TIMEOUT_RECHECK_SEC, (GSourceFunc)check_for_updates, NULL);
