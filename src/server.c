@@ -58,7 +58,7 @@ static gboolean handle_check_for_updates(SlaptService *srv, GDBusMethodInvocatio
     slapt_transaction_t *trxn = slapt_transaction_t_init();
 
     slapt_vector_t *installed_pkgs = slapt_get_installed_pkgs();
-    slapt_vector_t *avail_pkgs = slapt_get_available_pkgs();
+    slapt_vector_t *avail_pkgs = slapt_get_available_pkgs(rc);
     if (avail_pkgs == NULL || installed_pkgs == NULL)
         goto SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE;
     if (avail_pkgs->size == 0)
