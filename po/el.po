@@ -7,10 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slapt-update-notifier 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-02-22 21:15-0500\n"
+"POT-Creation-Date: 2026-05-31 22:59-0400\n"
 "PO-Revision-Date: 2010-10-07 16:53+0200\n"
 "Last-Translator: George Vlahavas <vlahavas~at~gmail~dot~com>\n"
 "Language-Team: slapt-get-devel <slapt-get-devel@software.jaos.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -18,21 +19,18 @@ msgstr ""
 "X-Poedit-Country: GREECE\n"
 "X-Poedit-SourceCharset: utf-8\n"
 
-#: src/client.c:128
+msgid "Click on the update icon to see the available updates"
+msgstr ""
+"Πατήστε το εικονίδιο ενημέρωσης για να δείτε τις διαθέσιμες ενημερώσεις"
+
+msgid "Hide"
+msgstr "Απόκρυψη"
+
 msgid "New updates available"
 msgstr "Υπάρχουν νέες διαθέσιμες αναβαθμίσεις"
 
-#: src/client.c:129
-msgid "Click on the update icon to see the available updates"
-msgstr "Πατήστε το εικονίδιο ενημέρωσης για να δείτε τις διαθέσιμες ενημερώσεις"
-
-#: src/client.c:237
 msgid "Updates available"
 msgstr "Υπάρχουν διαθέσιμες ενημερώσεις"
-
-#: src/client.c:244
-msgid "Hide"
-msgstr "Απόκρυψη"
 
 #~ msgid "Orientation"
 #~ msgstr "Orientation"
