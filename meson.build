@@ -53,7 +53,7 @@ if libnotify.found()
   configuration.set('USE_LIBNOTIFY', 1)
 endif
 pkexec = find_program('pkexec')
-gslapt = find_program('gslapt-polkit')
+gslapt = find_program('gslapt-polkit', required: true)
 configuration.set_quoted('GSLAPT_POLKIT_PATH', gslapt.path())
 dbus = dependency('dbus-1')
 
