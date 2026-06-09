@@ -37,8 +37,8 @@ ninja -C build
 DESTDIR="${DESTDIR}" ninja -C build install
 
 find "${DESTDIR}" -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
-if [ -d "{DESTDIR}/usr/man" ]; then find "${DESTDIR}/usr/man" -type f -exec gzip {} \; ;fi
-if [ -d "{DESTDIR}/usr/share/man" ]; then find "${DESTDIR}/usr/share/man" -type f -exec gzip {} \; ;fi
+if [ -d "${DESTDIR}/usr/man" ]; then find "${DESTDIR}/usr/man" -type f -exec gzip {} \; ;fi
+if [ -d "${DESTDIR}/usr/share/man" ]; then find "${DESTDIR}/usr/share/man" -type f -exec gzip {} \; ;fi
 
 mkdir -p "${DESTDIR}/install"
 cat slack-desc > "${DESTDIR}/install/slack-desc"
