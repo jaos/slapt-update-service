@@ -12,16 +12,4 @@ src/slaptService
 po/*.gmo
 po/POTFILES
 
-aclocal.m4
-configure
-depcomp
-install-sh
-missing
-compile
-aclocal.m4
-autom4te.cache
-config.*
-**/stamp-*
-src/.deps
-**/Makefile
-**/Makefile.in*
+build/
