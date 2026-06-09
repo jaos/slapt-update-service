@@ -7,38 +7,66 @@
  * any later version.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have a copy of the GNU General Public License
  * along with this program; If not, see <http://www.gnu.org/licenses/>
  */
 #include "slaptService.h"
 #include "common.h"
 #include "config.h"
+#include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <unistd.h>
 #include <glib.h>
-#include <syslog.h>
 #include <slapt.h>
+
+static GMainLoop *main_loop = NULL;
+
+static void restore_cwd(gint saved_fd)
+{
+    if (saved_fd != -1) {
+        if (fchdir(saved_fd) == -1) {
+            g_warning("failed to restore working directory: %s", g_strerror(errno));
+        }
+        close(saved_fd);
+    }
+}
 
 static gboolean handle_refresh_cache(SlaptService *srv, GDBusMethodInvocation *meth, gpointer user_data)
 {
     (void)user_data;
     slapt_config_t *rc = slapt_config_t_read(SLAPT_SERVICE_DEFAULT_RC);
+    if (rc == NULL) {
+        g_dbus_method_invocation_return_error(meth,
+            G_IO_ERROR, G_IO_ERROR_FAILED,
+            "failed to read config file");
+        return TRUE;
+    }
+
     slapt_working_dir_init(rc);
+    gint saved_fd = open(".", O_RDONLY);
     if ((chdir(rc->working_dir)) == -1) {
+        restore_cwd(saved_fd);
         slapt_config_t_free(rc);
+        g_dbus_method_invocation_return_error(meth,
+            G_IO_ERROR, G_IO_ERROR_FAILED,
+            "failed to change to working directory");
         return TRUE;
     }
 
     if (slapt_update_pkg_cache(rc) != 0) {
+        restore_cwd(saved_fd);
         slapt_config_t_free(rc);
+        g_dbus_method_invocation_return_error(meth,
+            G_IO_ERROR, G_IO_ERROR_FAILED,
+            "package cache refresh failed");
         return TRUE;
     }
 
+    restore_cwd(saved_fd);
     slapt_config_t_free(rc);
     slapt_service_complete_refresh_cache(srv, meth);
     return TRUE;
@@ -49,23 +77,31 @@ static gboolean handle_check_for_updates(SlaptService *srv, GDBusMethodInvocatio
     (void)user_data;
     guint count = 0;
     slapt_config_t *rc = slapt_config_t_read(SLAPT_SERVICE_DEFAULT_RC);
+    if (rc == NULL) {
+        g_dbus_method_invocation_return_error(meth,
+            G_IO_ERROR, G_IO_ERROR_FAILED,
+            "failed to read config file");
+        return TRUE;
+    }
+
     slapt_working_dir_init(rc);
+    gint saved_fd = open(".", O_RDONLY);
     if ((chdir(rc->working_dir)) == -1) {
+        restore_cwd(saved_fd);
         slapt_config_t_free(rc);
+        g_dbus_method_invocation_return_error(meth,
+            G_IO_ERROR, G_IO_ERROR_FAILED,
+            "failed to change to working directory");
         return TRUE;
     }
 
     slapt_transaction_t *trxn = slapt_transaction_t_init();
-
     slapt_vector_t *installed_pkgs = slapt_get_installed_pkgs();
     slapt_vector_t *avail_pkgs = slapt_get_available_pkgs(rc);
-    if (avail_pkgs == NULL || installed_pkgs == NULL)
-        goto SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE;
-    if (avail_pkgs->size == 0)
-        goto SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE;
 
-    if (trxn == NULL)
+    if (avail_pkgs == NULL || installed_pkgs == NULL || trxn == NULL || avail_pkgs->size == 0) {
         goto SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE;
+    }
 
     slapt_vector_t_foreach(slapt_pkg_t *, installed_pkg, installed_pkgs) {
         slapt_pkg_t *update_pkg = NULL;
@@ -91,6 +127,7 @@ static gboolean handle_check_for_updates(SlaptService *srv, GDBusMethodInvocatio
     count += trxn->upgrade_pkgs->size + trxn->install_pkgs->size;
 
 SLAPT_SERVICE_REAL_CHECK_FOR_UPDATES_DONE:
+    restore_cwd(saved_fd);
     if (installed_pkgs != NULL)
         slapt_vector_t_free(installed_pkgs);
     if (avail_pkgs != NULL)
@@ -110,7 +147,7 @@ static void on_name_lost(GDBusConnection *c, const gchar *name, gpointer user_da
     (void)name;
     (void)user_data;
     g_warning("server name lost");
-    exit(1);
+    g_main_loop_quit(main_loop);
 }
 
 static void on_name_acquired(GDBusConnection *c, const gchar *name, gpointer user_data)
@@ -125,9 +162,8 @@ static void on_name_acquired(GDBusConnection *c, const gchar *name, gpointer use
 
 int main(void)
 {
-
 #if !GLIB_CHECK_VERSION(2,35,0)
-    g_type_init ();
+    g_type_init();
 #endif
 #ifdef SLAPT_HAS_GPGME
     gpgme_check_version(NULL);
@@ -143,11 +179,12 @@ int main(void)
         fprintf(stderr, "failed to close stdout\n");
     }
 
-    GMainLoop *loop = g_main_loop_new(NULL, FALSE);
-    guint owner_id = g_bus_own_name(G_BUS_TYPE_SYSTEM, SLAPT_SERVICE_NAMESPACE, G_BUS_NAME_OWNER_FLAGS_NONE, NULL, on_name_acquired, on_name_lost, NULL, NULL);
-    g_main_loop_run(loop);
+    main_loop = g_main_loop_new(NULL, FALSE);
+    guint owner_id = g_bus_own_name(G_BUS_TYPE_SYSTEM, SLAPT_SERVICE_NAMESPACE,
+        G_BUS_NAME_OWNER_FLAGS_NONE, NULL, on_name_acquired, on_name_lost, NULL, NULL);
+    g_main_loop_run(main_loop);
     g_bus_unown_name(owner_id);
-    g_main_loop_unref (loop);
+    g_main_loop_unref(main_loop);
 
     return 0;
 }

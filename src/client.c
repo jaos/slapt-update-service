@@ -21,8 +21,8 @@
 #include <libintl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #ifdef USE_LIBNOTIFY
 #include <libnotify/notify.h>
@@ -31,7 +31,7 @@
 #define _(x) gettext(x)
 #define SUN_RUNNING_ICON PIXMAPS_DIR "/slapt-update-notifier-idle.png"
 #define SUN_UPDATE_ICON PIXMAPS_DIR "/slapt-update-notifier-update.png"
-#define SUN_TIMEOUT_RECHECK_SEC 360 // 1 hour
+#define SUN_TIMEOUT_RECHECK_SEC 360 /* 6 minutes */
 #define SUN_TIMEOUT_DBUS_MSEC 300000 /* 1000*(1*5*60), 5 minutes */
 
 struct slapt_update_notifier {
@@ -63,24 +63,36 @@ static void set_hidden(void)
 static void run_gslapt(const char *action)
 {
     gchar *argv[4];
-    argv[0] = GSLAPT_POLKIT_PATH;
-    if (strcmp(action, "upgrade") == 0) {
-        argv[1] = "--upgrade";
+    gchar *upgrade_arg = NULL;
+    gchar *gslapt_path = g_find_program_in_path("gslapt-polkit");
+    if (gslapt_path == NULL) {
+        gslapt_path = g_strdup(GSLAPT_POLKIT_PATH);
+    }
+    argv[0] = gslapt_path;
+    if (g_strcmp0(action, "upgrade") == 0) {
+        upgrade_arg = g_strdup("--upgrade");
+        argv[1] = upgrade_arg;
     } else {
         argv[1] = NULL;
     }
     argv[2] = NULL;
     g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, NULL);
+    g_free(gslapt_path);
+    g_free(upgrade_arg);
     set_hidden();
 }
 
-void tray_clicked(GtkStatusIcon *status_icon, gpointer data)
+static void tray_clicked(GtkStatusIcon *status_icon, gpointer data)
 {
+    (void)status_icon;
+    (void)data;
     run_gslapt("upgrade");
 }
 
-void tray_menu(GtkStatusIcon *status_icon, guint button, guint activate_time, gpointer data)
+static void tray_menu(GtkStatusIcon *status_icon, guint button, guint activate_time, gpointer data)
 {
+    (void)status_icon;
+    (void)data;
     gtk_menu_popup(
         GTK_MENU(sun->menu),
         NULL, NULL, NULL, NULL,
@@ -88,7 +100,7 @@ void tray_menu(GtkStatusIcon *status_icon, guint button, guint activate_time, gp
 }
 
 #ifdef USE_LIBNOTIFY
-gboolean show_notification(gpointer data)
+static gboolean show_notification(gpointer data)
 {
     NotifyNotification *n;
 
@@ -96,6 +108,7 @@ gboolean show_notification(gpointer data)
         _("New updates available"),
         _("Click on the update icon to see the available updates"),
         "info");
+    notify_notification_set_timeout(n, 10000);
 
     GError *error = NULL;
     if (notify_notification_show(n, &error) != TRUE) {
@@ -109,22 +122,27 @@ gboolean show_notification(gpointer data)
 }
 #endif
 
-void tray_destroy(struct slapt_update_notifier *sun_instance)
+static void tray_destroy(struct slapt_update_notifier *sun_instance)
 {
-    if (sun_instance->updates_pixbuf)
-        g_object_unref(G_OBJECT(sun_instance->updates_pixbuf));
-    if (sun_instance->running_pixbuf)
-        g_object_unref(G_OBJECT(sun_instance->running_pixbuf));
+    if (sun_instance == NULL)
+        return;
 
-    g_object_unref(G_OBJECT(sun_instance->tray_icon));
+    if (sun_instance->proxy != NULL)
+        g_object_unref(G_OBJECT(sun_instance->proxy));
+    if (sun_instance->updates_pixbuf != NULL)
+        g_object_unref(G_OBJECT(sun_instance->updates_pixbuf));
+    if (sun_instance->running_pixbuf != NULL)
+        g_object_unref(G_OBJECT(sun_instance->running_pixbuf));
+    if (sun_instance->tray_icon != NULL)
+        g_object_unref(G_OBJECT(sun_instance->tray_icon));
 }
 
 static void set_working(void)
 {
     gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->running_pixbuf);
     gtk_status_icon_set_visible(sun->tray_icon, TRUE);
-    while (gtk_events_pending())
-        gtk_main_iteration();
+    while (g_main_context_pending(NULL))
+        g_main_context_iteration(NULL, FALSE);
 }
 
 static void set_updates_pending(void)
@@ -140,8 +158,8 @@ static void set_updates_pending(void)
 #ifdef USE_LIBNOTIFY
     show_notification(NULL);
 #endif
-    while (gtk_events_pending())
-        gtk_main_iteration();
+    while (g_main_context_pending(NULL))
+        g_main_context_iteration(NULL, FALSE);
 }
 
 static gboolean check_for_updates(gpointer userdata)
@@ -178,19 +196,15 @@ static gboolean check_for_updates(gpointer userdata)
 
 static gboolean check_for_updates_once(gpointer userdata)
 {
+    (void)userdata;
     check_for_updates(NULL);
     return FALSE;
 }
 
-/*
-void menuitem_check_callback(GObject *g, void *dat)
+static void menuitem_hide_callback(GObject *g, gpointer data)
 {
-    check_for_updates_once(NULL);
-}
-*/
-
-void menuitem_hide_callback(GObject *g, void *data)
-{
+    (void)g;
+    (void)data;
     set_hidden();
 }
 
@@ -213,7 +227,7 @@ int main(int argc, char *argv[])
     sun->menu = gtk_menu_new();
     GtkWidget *hide_menuitem = gtk_menu_item_new_with_label(_("Hide"));
     gtk_menu_shell_append(GTK_MENU_SHELL(sun->menu), hide_menuitem);
-    g_signal_connect(G_OBJECT(hide_menuitem), "activate", G_CALLBACK(menuitem_hide_callback), NULL);
+    g_signal_connect_swapped(G_OBJECT(hide_menuitem), "activate", G_CALLBACK(menuitem_hide_callback), G_OBJECT(sun->tray_icon));
     gtk_widget_show_all(sun->menu);
 
     GError *error = NULL;
@@ -231,12 +245,15 @@ int main(int argc, char *argv[])
     }
     g_dbus_proxy_set_default_timeout((GDBusProxy *)sun->proxy, SUN_TIMEOUT_DBUS_MSEC);
 
-    g_timeout_add_seconds(0, (GSourceFunc)check_for_updates_once, NULL);
-    g_timeout_add_seconds(SUN_TIMEOUT_RECHECK_SEC, (GSourceFunc)check_for_updates, NULL);
+    g_timeout_add_seconds(0, check_for_updates_once, NULL);
+    g_timeout_add_seconds(SUN_TIMEOUT_RECHECK_SEC, check_for_updates, NULL);
     gtk_main();
 
+    sun->proxy = NULL;
     tray_destroy(sun);
+    sun->tray_icon = NULL;
     free(sun);
+    sun = NULL;
 
 #ifdef USE_LIBNOTIFY
     notify_uninit();
