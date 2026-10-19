@@ -14,16 +14,21 @@
  * You should have a copy of the GNU General Public License
  * along with this program; If not, see <http://www.gnu.org/licenses/>
  */
+#include "config.h"
 #include "slaptService.h"
 #include "common.h"
-#include "config.h"
 #include <fcntl.h>
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
+#include <errno.h>
 #include <glib.h>
 #include <slapt.h>
 
 static GMainLoop *main_loop = NULL;
+static SlaptService *service_instance = NULL;
+static gboolean name_held = FALSE;
+static time_t last_refresh = 0;
 
 static void restore_cwd(gint saved_fd)
 {
@@ -38,6 +43,13 @@ static void restore_cwd(gint saved_fd)
 static gboolean handle_refresh_cache(SlaptService *srv, GDBusMethodInvocation *meth, gpointer user_data)
 {
     (void)user_data;
+
+    time_t now = time(NULL);
+    if (last_refresh != 0 && now - last_refresh < SLAPT_REFRESH_CACHE_MIN_INTERVAL_SEC) {
+        slapt_service_complete_refresh_cache(srv, meth);
+        return TRUE;
+    }
+
     slapt_config_t *rc = slapt_config_t_read(SLAPT_SERVICE_DEFAULT_RC);
     if (rc == NULL) {
         g_dbus_method_invocation_return_error(meth,
@@ -68,6 +80,7 @@ static gboolean handle_refresh_cache(SlaptService *srv, GDBusMethodInvocation *m
 
     restore_cwd(saved_fd);
     slapt_config_t_free(rc);
+    last_refresh = now;
     slapt_service_complete_refresh_cache(srv, meth);
     return TRUE;
 }
@@ -154,22 +167,17 @@ static void on_name_acquired(GDBusConnection *c, const gchar *name, gpointer use
 {
     (void)name;
     (void)user_data;
-    SlaptService *srv = slapt_service_skeleton_new();
-    g_signal_connect(srv, "handle-check-for-updates", G_CALLBACK(handle_check_for_updates), NULL);
-    g_signal_connect(srv, "handle-refresh-cache", G_CALLBACK(handle_refresh_cache), NULL);
-    g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(srv), c, SLAPT_SERVICE_PATH, NULL);
+    name_held = TRUE;
+    service_instance = slapt_service_skeleton_new();
+    g_signal_connect(service_instance, "handle-check-for-updates", G_CALLBACK(handle_check_for_updates), NULL);
+    g_signal_connect(service_instance, "handle-refresh-cache", G_CALLBACK(handle_refresh_cache), NULL);
+    g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(service_instance), c, SLAPT_SERVICE_PATH, NULL);
 }
 
 int main(void)
 {
-#if !GLIB_CHECK_VERSION(2,35,0)
-    g_type_init();
-#endif
 #ifdef SLAPT_HAS_GPGME
     gpgme_check_version(NULL);
-#ifdef ENABLE_NLS
-    gpgme_set_locale(NULL, LC_CTYPE, setlocale(LC_CTYPE, NULL));
-#endif
 #endif
     curl_global_init(CURL_GLOBAL_ALL);
 
@@ -184,7 +192,9 @@ int main(void)
         G_BUS_NAME_OWNER_FLAGS_NONE, NULL, on_name_acquired, on_name_lost, NULL, NULL);
     g_main_loop_run(main_loop);
     g_bus_unown_name(owner_id);
+    if (service_instance != NULL)
+        g_object_unref(G_OBJECT(service_instance));
     g_main_loop_unref(main_loop);
 
-    return 0;
+    return name_held ? 0 : -1;
 }

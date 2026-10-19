@@ -1,6 +1,6 @@
 project('slapt-update-service', 'c',
   version: '0.5.5',
-  license: 'GPLv2',
+  license: 'GPLv3',
   meson_version: '>= 0.53',
   default_options: [
     'c_std=gnu2x',
@@ -48,11 +48,8 @@ gthread = dependency('gthread-2.0')
 gio = dependency('gio-2.0')
 gio_unix = dependency('gio-unix-2.0')
 gtk3 = dependency('gtk+-3.0', version: '>= 3.4.0')
-libnotify = dependency('libnotify', required: false)
-if libnotify.found()
-  configuration.set('USE_LIBNOTIFY', 1)
-endif
-pkexec = find_program('pkexec')
+libnotify = dependency('libnotify')
+configuration.set('USE_LIBNOTIFY', 1)
 gslapt = find_program('gslapt-polkit', required: true)
 configuration.set_quoted('GSLAPT_POLKIT_PATH', gslapt.path())
 dbus = dependency('dbus-1')
@@ -62,7 +59,7 @@ client_deps = service_deps + [gtk3, libnotify]
 
 cflags = [
   '-U_FORTIFY_SOURCE',
-  '-D_FORTIFY_SOURCE=3',
+  '-D_FORTIFY_SOURCE=2',
   '-fcf-protection=full',
   '-fstack-clash-protection',
   '-fstack-protector-all',
@@ -110,7 +107,7 @@ cflags = [
   '-Wwrite-strings',
 ]
 add_project_arguments(cc.get_supported_arguments(cflags), language: 'c')
-add_project_link_arguments(cc.get_supported_link_arguments(cflags), language: 'c')
+
 lflags = ['-Wl,-z,defs',
   '-Wl,-z,noexecstack',
   '-Wl,-z,now',

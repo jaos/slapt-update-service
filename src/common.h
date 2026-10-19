@@ -19,5 +19,6 @@
 #define SLAPT_SERVICE_NAMESPACE "org.jaos.SlaptService"
 #define SLAPT_SERVICE_PATH "/org/jaos/SlaptService"
 #define SLAPT_SERVICE_DEFAULT_RC "/etc/slapt-get/slapt-getrc"
+#define SLAPT_REFRESH_CACHE_MIN_INTERVAL_SEC 300
 
 #endif /*__SLAPT_SERVICE_COMMON_H__ */

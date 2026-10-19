@@ -19,10 +19,7 @@
 #include "slaptService.h"
 #include "common.h"
 #include <libintl.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <glib.h>
-#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #ifdef USE_LIBNOTIFY
 #include <libnotify/notify.h>
@@ -38,31 +35,49 @@ struct slapt_update_notifier {
     GtkStatusIcon *tray_icon;
     GdkPixbuf *running_pixbuf;
     GdkPixbuf *updates_pixbuf;
-    GtkWidget *menu;
     SlaptService *proxy;
+    GtkWidget *menu;
+#ifdef USE_LIBNOTIFY
+    NotifyNotification *notification;
+#endif
+    gboolean tray_supported; /* gnome does not support a tray */
 };
 
 static struct slapt_update_notifier *sun = NULL;
+static guint tray_miss_count = 0;
+static gboolean tray_probed = FALSE;
+
+#ifdef USE_LIBNOTIFY
+static void close_notification(struct slapt_update_notifier *sun_instance)
+{
+    if (sun_instance->notification == NULL)
+        return;
+
+    GError *error = NULL;
+    if (notify_notification_close(sun_instance->notification, &error) != TRUE) {
+        g_warning("failed to close notification: %s", error->message);
+        g_error_free(error);
+    }
+
+    g_object_unref(G_OBJECT(sun_instance->notification));
+    sun_instance->notification = NULL;
+}
+#endif
 
 static void set_hidden(void)
 {
-    gtk_status_icon_set_visible(sun->tray_icon, FALSE);
+    if (sun->tray_supported) {
+        gtk_status_icon_set_visible(sun->tray_icon, FALSE);
+    }
 
 #ifdef USE_LIBNOTIFY
-    NotifyNotification *n = g_object_get_data(G_OBJECT(sun->tray_icon), "notification");
-    if (n != NULL) {
-        GError *error = NULL;
-        if (notify_notification_close(n, &error) != TRUE) {
-            fprintf(stderr, "failed to send notification: %s\n", error->message);
-            g_error_free(error);
-        }
-    }
+    close_notification(sun);
 #endif
 }
 
 static void run_gslapt(const char *action)
 {
-    gchar *argv[4];
+    gchar *argv[3];
     gchar *upgrade_arg = NULL;
     gchar *gslapt_path = g_find_program_in_path("gslapt-polkit");
     if (gslapt_path == NULL) {
@@ -76,10 +91,17 @@ static void run_gslapt(const char *action)
         argv[1] = NULL;
     }
     argv[2] = NULL;
-    g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, NULL);
+
+    GError *error = NULL;
+    if (!g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &error)) {
+        g_warning("failed to launch %s: %s", gslapt_path, error->message);
+        g_error_free(error);
+    }
+
+    set_hidden();
+
     g_free(gslapt_path);
     g_free(upgrade_arg);
-    set_hidden();
 }
 
 static void tray_clicked(GtkStatusIcon *status_icon, gpointer data)
@@ -89,36 +111,60 @@ static void tray_clicked(GtkStatusIcon *status_icon, gpointer data)
     run_gslapt("upgrade");
 }
 
+static void menuitem_hide_callback(GObject *g, gpointer data)
+{
+    (void)g;
+    (void)data;
+    set_hidden();
+}
+
 static void tray_menu(GtkStatusIcon *status_icon, guint button, guint activate_time, gpointer data)
 {
     (void)status_icon;
     (void)data;
-    gtk_menu_popup(
-        GTK_MENU(sun->menu),
-        NULL, NULL, NULL, NULL,
-        button, activate_time);
+    gtk_menu_popup(GTK_MENU(sun->menu), NULL, NULL, NULL, NULL, button, activate_time);
 }
 
 #ifdef USE_LIBNOTIFY
-static gboolean show_notification(gpointer data)
+static void notification_action(NotifyNotification *n, char *action, gpointer user_data)
+{
+    (void)n;
+    (void)user_data;
+
+    /* notification providers (and the GNOME AppIndicator extension) call this
+     * back when the user activates an action instead of dismissing the popup */
+    g_message("notification action \"%s\" activated", action);
+    run_gslapt(action);
+}
+
+static void show_notification(void)
 {
     NotifyNotification *n;
+
+    close_notification(sun);
 
     n = notify_notification_new(
         _("New updates available"),
         _("Click on the update icon to see the available updates"),
         "info");
     notify_notification_set_timeout(n, 10000);
+    notify_notification_add_action(
+        n,
+        "upgrade",
+        _("Upgrade packages now"),
+        NOTIFY_ACTION_CALLBACK(notification_action),
+        NULL,
+        NULL);
 
     GError *error = NULL;
     if (notify_notification_show(n, &error) != TRUE) {
-        fprintf(stderr, "failed to send notification: %s\n", error->message);
+        g_warning("failed to send notification: %s", error->message);
         g_error_free(error);
+        g_object_unref(G_OBJECT(n));
+        return;
     }
 
-    g_object_unref(G_OBJECT(n));
-
-    return FALSE;
+    sun->notification = n;
 }
 #endif
 
@@ -127,36 +173,56 @@ static void tray_destroy(struct slapt_update_notifier *sun_instance)
     if (sun_instance == NULL)
         return;
 
-    if (sun_instance->proxy != NULL)
+#ifdef USE_LIBNOTIFY
+    close_notification(sun_instance);
+#endif
+
+    if (sun_instance->proxy != NULL) {
         g_object_unref(G_OBJECT(sun_instance->proxy));
-    if (sun_instance->updates_pixbuf != NULL)
+        sun_instance->proxy = NULL;
+    }
+    if (sun_instance->updates_pixbuf != NULL) {
         g_object_unref(G_OBJECT(sun_instance->updates_pixbuf));
-    if (sun_instance->running_pixbuf != NULL)
+        sun_instance->updates_pixbuf = NULL;
+    }
+    if (sun_instance->running_pixbuf != NULL) {
         g_object_unref(G_OBJECT(sun_instance->running_pixbuf));
-    if (sun_instance->tray_icon != NULL)
+        sun_instance->running_pixbuf = NULL;
+    }
+    if (sun_instance->menu != NULL) {
+        g_object_unref(G_OBJECT(sun_instance->menu));
+        sun_instance->menu = NULL;
+    }
+    if (sun_instance->tray_icon != NULL) {
         g_object_unref(G_OBJECT(sun_instance->tray_icon));
+        sun_instance->tray_icon = NULL;
+    }
 }
 
 static void set_working(void)
 {
-    gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->running_pixbuf);
-    gtk_status_icon_set_visible(sun->tray_icon, TRUE);
+    if (sun->tray_supported) {
+        gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->running_pixbuf);
+        gtk_status_icon_set_visible(sun->tray_icon, TRUE);
+    }
     while (g_main_context_pending(NULL))
         g_main_context_iteration(NULL, FALSE);
 }
 
 static void set_updates_pending(void)
 {
-    gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->updates_pixbuf);
-    gtk_status_icon_set_visible(sun->tray_icon, TRUE);
+    if (sun->tray_supported) {
+        gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->updates_pixbuf);
+        gtk_status_icon_set_visible(sun->tray_icon, TRUE);
 #if GTK_CHECK_VERSION(3,0,0)
-    gtk_status_icon_set_tooltip_text(sun->tray_icon, _("Updates available"));
+        gtk_status_icon_set_tooltip_text(sun->tray_icon, _("Updates available"));
 #else
-    gtk_status_icon_set_tooltip(sun->tray_icon, _("Updates available"));
+        gtk_status_icon_set_tooltip(sun->tray_icon, _("Updates available"));
 #endif
+    }
 
 #ifdef USE_LIBNOTIFY
-    show_notification(NULL);
+    show_notification();
 #endif
     while (g_main_context_pending(NULL))
         g_main_context_iteration(NULL, FALSE);
@@ -186,6 +252,19 @@ static gboolean check_for_updates(gpointer userdata)
         set_hidden();
         return TRUE;
     }
+
+    /* gnome has no tray */
+    if (!tray_probed && gtk_status_icon_get_visible(sun->tray_icon)) {
+        if (gtk_status_icon_is_embedded(sun->tray_icon)) {
+            tray_probed = TRUE;
+            sun->tray_supported = TRUE;
+        } else if (++tray_miss_count >= 2) {
+            tray_probed = TRUE;
+            sun->tray_supported = FALSE;
+            g_warning("no notification area available: the tray icon cannot be shown, only notifications");
+        }
+    }
+
     if (count > 0) {
         set_updates_pending();
     } else {
@@ -201,23 +280,28 @@ static gboolean check_for_updates_once(gpointer userdata)
     return FALSE;
 }
 
-static void menuitem_hide_callback(GObject *g, gpointer data)
-{
-    (void)g;
-    (void)data;
-    set_hidden();
-}
-
 int main(int argc, char *argv[])
 {
     gtk_init(&argc, &argv);
+
 #ifdef USE_LIBNOTIFY
     notify_init("slapt-update-notifier");
 #endif
 
-    sun = malloc(sizeof *sun);
+    sun = g_malloc0(sizeof *sun);
+    sun->tray_supported = TRUE;
     sun->updates_pixbuf = gdk_pixbuf_new_from_file(SUN_UPDATE_ICON, NULL);
     sun->running_pixbuf = gdk_pixbuf_new_from_file(SUN_RUNNING_ICON, NULL);
+    if (sun->updates_pixbuf == NULL || sun->running_pixbuf == NULL) {
+        g_warning("failed to load tray icons from %s", PIXMAPS_DIR);
+        tray_destroy(sun);
+        g_free(sun);
+        sun = NULL;
+#ifdef USE_LIBNOTIFY
+        notify_uninit();
+#endif
+        return -1;
+    }
     sun->tray_icon = gtk_status_icon_new();
 
     g_signal_connect(G_OBJECT(sun->tray_icon), "activate", G_CALLBACK(tray_clicked), NULL);
@@ -237,7 +321,8 @@ int main(int argc, char *argv[])
         g_warning("Failed to initialize DBUS proxy: %s", error->message);
         g_error_free(error);
         tray_destroy(sun);
-        free(sun);
+        g_free(sun);
+        sun = NULL;
 #ifdef USE_LIBNOTIFY
         notify_uninit();
 #endif
@@ -249,10 +334,8 @@ int main(int argc, char *argv[])
     g_timeout_add_seconds(SUN_TIMEOUT_RECHECK_SEC, check_for_updates, NULL);
     gtk_main();
 
-    sun->proxy = NULL;
     tray_destroy(sun);
-    sun->tray_icon = NULL;
-    free(sun);
+    g_free(sun);
     sun = NULL;
 
 #ifdef USE_LIBNOTIFY
