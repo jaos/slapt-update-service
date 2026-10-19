@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slapt-update-service git\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-31 22:59-0400\n"
+"POT-Creation-Date: 2026-10-18 21:46-0400\n"
 "PO-Revision-Date: 2012-08-26 15:04+0200\n"
 "Last-Translator: Isratine Citizen <genghiskhan@gmx.ca>\n"
 "Language-Team: slapt-get-devel <slapt-get-devel@software.jaos.org>\n"
@@ -16,17 +16,20 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Click on the update icon to see the available updates"
-msgstr "הקליקו על צלמית העדכון כדי לראות את העדכונים הזמינים"
-
-msgid "Hide"
-msgstr "הסתרה"
-
 msgid "New updates available"
 msgstr "עדכונים חדשים זמינים"
 
+msgid "Click on the update icon to see the available updates"
+msgstr "הקליקו על צלמית העדכון כדי לראות את העדכונים הזמינים"
+
+msgid "Upgrade packages now"
+msgstr ""
+
 msgid "Updates available"
 msgstr "עדכונים זמינים"
+
+msgid "Hide"
+msgstr "הסתרה"
 
 #~ msgid "Orientation"
 #~ msgstr "אוריינטציה"

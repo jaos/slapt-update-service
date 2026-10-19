@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slapt-update-service 0.5.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-31 22:59-0400\n"
+"POT-Creation-Date: 2026-10-18 21:46-0400\n"
 "PO-Revision-Date: 2021-03-24 20:33+0200\n"
 "Last-Translator: Dmytro Voitenko <dgv.at@ukr.net>\n"
 "Language-Team: slapt-get-devel <slapt-get-devel@software.jaos.org>\n"
@@ -18,14 +18,17 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Click on the update icon to see the available updates"
-msgstr "Щёлкните на значок, чтобы увидеть доступные обновления"
-
-msgid "Hide"
-msgstr "Скрыть"
-
 msgid "New updates available"
 msgstr "Доступны новые обновления"
 
+msgid "Click on the update icon to see the available updates"
+msgstr "Щёлкните на значок, чтобы увидеть доступные обновления"
+
+msgid "Upgrade packages now"
+msgstr ""
+
 msgid "Updates available"
 msgstr "Доступны обновления"
+
+msgid "Hide"
+msgstr "Скрыть"

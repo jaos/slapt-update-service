@@ -28,6 +28,7 @@ configuration.set_quoted('GETTEXT_PACKAGE', package)
 configuration.set_quoted('VERSION', version)
 configuration.set_quoted('PIXMAPS_DIR', pixmapsdir)
 configuration.set('servicedir', sbindir)
+configuration.set_quoted('LOCALE_DIR', localedir)
 
 # compiler based checks
 libcurl = dependency('libcurl')

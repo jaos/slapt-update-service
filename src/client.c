@@ -284,6 +284,10 @@ int main(int argc, char *argv[])
 {
     gtk_init(&argc, &argv);
 
+    bindtextdomain(GETTEXT_PACKAGE, LOCALE_DIR);
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+    textdomain(GETTEXT_PACKAGE);
+
 #ifdef USE_LIBNOTIFY
     notify_init("slapt-update-notifier");
 #endif
