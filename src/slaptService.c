@@ -488,7 +488,7 @@ slapt_service_call_check_for_updates (
 gboolean
 slapt_service_call_check_for_updates_finish (
     SlaptService *proxy,
-    guint *out_count,
+    guint* out_count,
     GAsyncResult *res,
     GError **error)
 {
@@ -520,7 +520,7 @@ _out:
 gboolean
 slapt_service_call_check_for_updates_sync (
     SlaptService *proxy,
-    guint *out_count,
+    guint* out_count,
     GCancellable *cancellable,
     GError **error)
 {
@@ -1201,7 +1201,11 @@ slapt_service_skeleton_dbus_interface_get_properties (GDBusInterfaceSkeleton *_s
 
   GVariantBuilder builder;
   guint n;
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sv}"));
+#if GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_84
+  g_variant_builder_init_static (&builder, G_VARIANT_TYPE ("a{sv}"));
+#else
+  g_variant_builder_init(&builder, G_VARIANT_TYPE ("a{sv}"));
+#endif
   if (_slapt_service_interface_info.parent_struct.properties == NULL)
     goto out;
   for (n = 0; _slapt_service_interface_info.parent_struct.properties[n] != NULL; n++)
@@ -1244,8 +1248,14 @@ slapt_service_skeleton_finalize (GObject *object)
 {
   SlaptServiceSkeleton *skeleton = SLAPT_SERVICE_SKELETON (object);
   g_list_free_full (skeleton->priv->changed_properties, (GDestroyNotify) _changed_property_free);
+#if GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_38
+  /* coverity[missing_lock : SUPPRESS] */
+  g_clear_pointer (&skeleton->priv->changed_properties_idle_source, g_source_destroy);
+#else
   if (skeleton->priv->changed_properties_idle_source != NULL)
     g_source_destroy (skeleton->priv->changed_properties_idle_source);
+skeleton->priv->changed_properties_idle_source = NULL;
+#endif
   g_main_context_unref (skeleton->priv->context);
   g_mutex_clear (&skeleton->priv->lock);
   G_OBJECT_CLASS (slapt_service_skeleton_parent_class)->finalize (object);

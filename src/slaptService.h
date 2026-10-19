@@ -40,7 +40,7 @@ struct _SlaptServiceIface
 
 };
 
-GType slapt_service_get_type (void) G_GNUC_CONST;
+GType slapt_service_get_type (void);
 
 GDBusInterfaceInfo *slapt_service_interface_info (void);
 guint slapt_service_override_properties (GObjectClass *klass, guint property_id_begin);
@@ -67,13 +67,13 @@ void slapt_service_call_check_for_updates (
 
 gboolean slapt_service_call_check_for_updates_finish (
     SlaptService *proxy,
-    guint *out_count,
+    guint* out_count,
     GAsyncResult *res,
     GError **error);
 
 gboolean slapt_service_call_check_for_updates_sync (
     SlaptService *proxy,
-    guint *out_count,
+    guint* out_count,
     GCancellable *cancellable,
     GError **error);
 
@@ -120,7 +120,7 @@ struct _SlaptServiceProxyClass
   GDBusProxyClass parent_class;
 };
 
-GType slapt_service_proxy_get_type (void) G_GNUC_CONST;
+GType slapt_service_proxy_get_type (void);
 
 #if GLIB_CHECK_VERSION(2, 44, 0)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (SlaptServiceProxy, g_object_unref)
@@ -190,7 +190,7 @@ struct _SlaptServiceSkeletonClass
   GDBusInterfaceSkeletonClass parent_class;
 };
 
-GType slapt_service_skeleton_get_type (void) G_GNUC_CONST;
+GType slapt_service_skeleton_get_type (void);
 
 #if GLIB_CHECK_VERSION(2, 44, 0)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (SlaptServiceSkeleton, g_object_unref)
