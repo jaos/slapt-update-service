@@ -1,15 +1,4 @@
-.gitignore
-
 src/*.o
-**/*swp
+**/*.swp
 **/*~
-
-data/SlaptService.conf
-data/org.jaos.SlaptService.service
-src/slapt-update-notifier
-src/slaptService
-
-po/*.gmo
-po/POTFILES
-
 build/
