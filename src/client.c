@@ -28,8 +28,10 @@
 #define _(x) gettext(x)
 #define SUN_RUNNING_ICON PIXMAPS_DIR "/slapt-update-notifier-idle.png"
 #define SUN_UPDATE_ICON PIXMAPS_DIR "/slapt-update-notifier-update.png"
-#define SUN_TIMEOUT_RECHECK_SEC 360 /* 6 minutes */
-#define SUN_TIMEOUT_DBUS_MSEC 300000 /* 1000*(1*5*60), 5 minutes */
+#define SUN_TIMEOUT_RECHECK_SEC 3600 /* 1*(60*60), 1 hour */
+#define SUN_TIMEOUT_DBUS_MSEC 900000 /* 1000*(15*60), 15 minutes */
+#define SUN_TIMEOUT_POPUP_MSEC 10000 /* 10 seconds */
+#define SUN_TRAY_PROBE_MAX_MISSES 2
 
 struct slapt_update_notifier {
     GtkStatusIcon *tray_icon;
@@ -39,7 +41,9 @@ struct slapt_update_notifier {
     GtkWidget *menu;
 #ifdef USE_LIBNOTIFY
     NotifyNotification *notification;
+    guint notified_updates_count; /* 0 = no popup sent yet */
 #endif
+    guint last_checked_updates_count;
     gboolean tray_supported; /* gnome does not support a tray */
 };
 
@@ -50,16 +54,26 @@ static gboolean tray_probed = FALSE;
 #ifdef USE_LIBNOTIFY
 static void close_notification(struct slapt_update_notifier *sun_instance)
 {
-    if (sun_instance->notification == NULL)
+    NotifyNotification *n = sun_instance->notification;
+    gint closed_reason;
+
+    if (n == NULL)
         return;
 
-    GError *error = NULL;
-    if (notify_notification_close(sun_instance->notification, &error) != TRUE) {
-        g_warning("failed to close notification: %s", error->message);
-        g_error_free(error);
+    /* dismissal needs no state: notified_updates_count already marks that count */
+    closed_reason = notify_notification_get_closed_reason(n);
+    if (closed_reason == NOTIFY_CLOSED_REASON_DISMISSED) {
+        g_message("notification dismissed by the user: quiet until the update count changes");
+    } else if (closed_reason == NOTIFY_CLOSED_REASON_UNSET) {
+        /* may error on already closed */
+        GError *error = NULL;
+        if (notify_notification_close(n, &error) != TRUE) {
+            g_warning("failed to close notification: %s", error->message);
+            g_error_free(error);
+        }
     }
 
-    g_object_unref(G_OBJECT(sun_instance->notification));
+    g_object_unref(G_OBJECT(n));
     sun_instance->notification = NULL;
 }
 #endif
@@ -131,23 +145,26 @@ static void notification_action(NotifyNotification *n, char *action, gpointer us
     (void)n;
     (void)user_data;
 
-    /* notification providers (and the GNOME AppIndicator extension) call this
-     * back when the user activates an action instead of dismissing the popup */
     g_message("notification action \"%s\" activated", action);
     run_gslapt(action);
 }
 
-static void show_notification(void)
+static void show_notification(guint updates_count)
 {
     NotifyNotification *n;
 
     close_notification(sun);
 
+    if (updates_count == sun->notified_updates_count) {
+        g_debug("updates unchanged (%u pending), popup already sent", updates_count);
+        return;
+    }
+
     n = notify_notification_new(
         _("New updates available"),
         _("Click on the update icon to see the available updates"),
         "info");
-    notify_notification_set_timeout(n, 10000);
+    notify_notification_set_timeout(n, SUN_TIMEOUT_POPUP_MSEC);
     notify_notification_add_action(
         n,
         "upgrade",
@@ -165,6 +182,7 @@ static void show_notification(void)
     }
 
     sun->notification = n;
+    sun->notified_updates_count = updates_count;
 }
 #endif
 
@@ -209,7 +227,7 @@ static void set_working(void)
         g_main_context_iteration(NULL, FALSE);
 }
 
-static void set_updates_pending(void)
+static void set_updates_pending(guint updates_count)
 {
     if (sun->tray_supported) {
         gtk_status_icon_set_from_pixbuf(sun->tray_icon, sun->updates_pixbuf);
@@ -222,16 +240,23 @@ static void set_updates_pending(void)
     }
 
 #ifdef USE_LIBNOTIFY
-    show_notification();
+    show_notification(updates_count);
 #endif
     while (g_main_context_pending(NULL))
         g_main_context_iteration(NULL, FALSE);
 }
 
+static void keep_last_updates_state(void)
+{
+    if (sun->last_checked_updates_count > 0)
+        set_updates_pending(sun->last_checked_updates_count);
+    else
+        set_working();
+}
+
 static gboolean check_for_updates(gpointer userdata)
 {
     (void)userdata;
-    /* set working icon */
     set_working();
 
     GError *refresh_error = NULL;
@@ -239,35 +264,40 @@ static gboolean check_for_updates(gpointer userdata)
     if (!r) {
         g_warning("refresh cache failed: %s", refresh_error->message);
         g_error_free(refresh_error);
-        set_hidden();
+        keep_last_updates_state();
         return TRUE;
     }
 
     GError *updates_error = NULL;
-    guint count = 0;
-    r = slapt_service_call_check_for_updates_sync(sun->proxy, &count, NULL, &updates_error);
+    guint updates_count = 0;
+    r = slapt_service_call_check_for_updates_sync(sun->proxy, &updates_count, NULL, &updates_error);
     if (!r) {
         g_warning("check for updates failed: %s", updates_error->message);
         g_error_free(updates_error);
-        set_hidden();
+        keep_last_updates_state();
         return TRUE;
     }
 
-    /* gnome has no tray */
+    /* gnome has no tray, so check for a tray being careful not to disable a working tray  */
     if (!tray_probed && gtk_status_icon_get_visible(sun->tray_icon)) {
         if (gtk_status_icon_is_embedded(sun->tray_icon)) {
             tray_probed = TRUE;
             sun->tray_supported = TRUE;
-        } else if (++tray_miss_count >= 2) {
+        } else if (++tray_miss_count >= SUN_TRAY_PROBE_MAX_MISSES) {
             tray_probed = TRUE;
             sun->tray_supported = FALSE;
             g_warning("no notification area available: the tray icon cannot be shown, only notifications");
         }
     }
 
-    if (count > 0) {
-        set_updates_pending();
+    sun->last_checked_updates_count = updates_count;
+
+    if (updates_count > 0) {
+        set_updates_pending(updates_count);
     } else {
+#ifdef USE_LIBNOTIFY
+        sun->notified_updates_count = 0;
+#endif
         set_hidden();
     }
     return TRUE;
